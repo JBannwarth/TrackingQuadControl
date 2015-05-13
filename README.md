@@ -43,9 +43,9 @@ Most known problems can be fixed by running:
 - Call update position values inside the `ControlSystem.control_loop()` function (around line 130)
 
 ### Making changes to the UI:
-- Edit ControlPannel.ui in Qt
+- Edit ControlPannel.ui in Qt Designer
 - Run the below command to compile the ui into a python runnable file
-- `./convert_ui.py ControlPannel ControlPannel`
+- `./convert_ui.sh ControlPannel ControlPannel`
 - Adjust accordingly in UI_ControlPannel class in quadcopter_control.py
 - `UI_ControlPannel.setup()`, initialises all callbacks
 - `UI_ControlPannel.update()`, loops to update output values to the ui
