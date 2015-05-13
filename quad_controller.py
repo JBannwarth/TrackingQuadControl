@@ -1,7 +1,7 @@
 __author__ = 'Jay Mills'
 #credit to Usman Qayyum for providing help with the initial ros interfacing code
 
-#this program runs a controllers for arducopter quadcopters runnnig off Vicon 
+#this program runs a controllers for arducopter quadcopters runnnig off Vicon
 #position measurments
 #requires ROS for the interfaces between with the quadcopter and the tracking software
 #run by typing the command: python quad_controller.py
@@ -192,12 +192,14 @@ class ControlSystem(Thread):
             quad1.send_channel_pwm(0,0,throttle_pwm, 0)
 
             #writing position and targets to the log file
-            self.log_file.write(str(time.time()) + ': Current Position (x, y, z, yaw): ' + str(round(quad1.pos_x, 4))
+            self.log_file.write(
+                           str(time.time()) + ': Current Position (x, y, z, yaw): ' + str(round(quad1.pos_x, 4))
                            + ', ' + str(round(quad1.pos_y, 4)) + ', ' + str(round(quad1.pos_z, 4)) + ', '
                            + str(round(quad1.yaw, 4)) +
                            "\n               Target Position  (x, y, z, yaw): " + str(round(self.target_x, 4)) + ', '
                            + str(round(self.target_y, 4)) + ', ' + str(round(self.target_z, 4)) + ', ' +
                            str(round(self.target_yaw, 4) + "\n")
+                           )
         else:
             #writing position and targets to the log file
             self.log_file.write(str(time.time()) + ': Current Position (x, y, z, yaw): ' + str(quad1.pos_x)
@@ -205,6 +207,7 @@ class ControlSystem(Thread):
                            "\n")
 
             quad1.disconnect_pwm_channels()
+
         # calls for the ui to be updated
         ui.update()
         if self.i == 20:
@@ -712,5 +715,3 @@ if __name__ == "__main__":
     #quad1.start()
     controller.start()
     sys.exit(app.exec_())
-
-
