@@ -71,7 +71,8 @@ rosdep install roscopter
 # For mavlink, add export PYTHONPATH="${PYTHONPATH}:~/TrackingQuadControl/src/roscopter/mavlink" to ~/.bashrc
 
 #building quadcopter control softwre
-cd Quadcopter_Controller
+cd ..
+cd ..
 source /opt/ros/indigo/setup.bash
 catkin_make
 source devel/setup.bash
