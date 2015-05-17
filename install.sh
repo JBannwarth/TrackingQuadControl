@@ -63,9 +63,9 @@ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu precise main" > /etc/ap
 wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
 sudo apt-get update
 sudo apt-get install ros-hydro-sensor-msgs python-serial python-tz
-sudo rosdep init
+
+# export ROS_PACKAGE_PATH=~/TrackingQuadControl/src/roscopter:$ROS_PACKAGE_PATH (path might change)
 rosdep update
-cd ros/src/roscopter
 rosdep install roscopter
 
 # For mavlink, add export PYTHONPATH="${PYTHONPATH}:~/TrackingQuadControl/src/roscopter/mavlink" to ~/.bashrc
