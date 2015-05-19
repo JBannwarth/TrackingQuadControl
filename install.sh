@@ -41,7 +41,7 @@ fi
 
 #download quadcopter control folder from github
 sudo apt-get install git
-git clone https://github.com/JMills93/TrackingQuadControl.git
+git clone https://github.com/JBannwarth/TrackingQuadControl.git
 cd TrackingQuadControl
 cd src
 sudo rm -rf geometry
