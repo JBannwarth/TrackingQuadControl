@@ -21,7 +21,7 @@ The altitude controller is experimental at the moment, and does not currently ha
 - Connect an ethernet cable to the computer running ros, make sure your ethernet IPv4 settings are as follow: `Address = 10.0.0.20`, `Netmask = 255.0.0.0`, `Gateway = 10.0.0.10`
 - Run commands in seperate terminals:
   - `roscore`
-  - `./run_vrpn.sh name` (for all required tracked objects)
+  - `./run_vrpn_client.sh name` (for all required tracked objects)
 	(where name is replaced with name of object being tracked)
   - `python quad_controller.py`
 - After running `./run_vrpn_client.sh`, in a new terminal run: `rostopic echo /name/pose`. This should have a stream of data if connected properly, (name being replaced with name of object

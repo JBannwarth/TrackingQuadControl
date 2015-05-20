@@ -6,4 +6,4 @@ sudo rm -rf build
 sudo rm -rf devel
 source /opt/ros/indigo/setup.bash
 catkin_make
-source /devel/setup.bash
+source devel/setup.bash
