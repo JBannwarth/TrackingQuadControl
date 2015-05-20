@@ -4,7 +4,7 @@
 **Edited by:** Jeremie Bannwarth, 12/05/2015
 
 ## Introduction
-This is the first version of the quadcopter controller running off vicon measurments.
+This is the first version of the quadcopter controller running off Vicon measurements.
 
 The altitude controller is experimental at the moment, and does not currently have an attitude controller
 
@@ -12,14 +12,14 @@ The altitude controller is experimental at the moment, and does not currently ha
 ## Installing
 - Download install.sh and place in directory you want to download the software to
 - In a terminal go to directory install.sh is and run: `./install.sh`
-- The install process will take a few minutes depending on the internet connection
+- The install process will take a few minutes depending on the Internet connection
 - The install process has been tested on Ubuntu 14.04 but should work with 13.10
-- Other versions of ubuntu require different versions of ROS to run
+- Other versions of Ubuntu require different versions of ROS to run
 
 
 ## Running the Program
-- Connect an ethernet cable to the computer running ros, make sure your ethernet IPv4 settings are as follow: `Address = 10.0.0.20`, `Netmask = 255.0.0.0`, `Gateway = 10.0.0.10`
-- Run commands in seperate terminals:
+- Connect an Ethernet cable to the computer running ros, make sure your Ethernet IPv4 settings are as follow: `Address = 10.0.0.20`, `Netmask = 255.0.0.0`, `Gateway = 10.0.0.10`
+- Run commands in separate terminals:
   - `roscore`
   - `./run_vrpn_client.sh name` (for all required tracked objects)
 	(where name is replaced with name of object being tracked)
