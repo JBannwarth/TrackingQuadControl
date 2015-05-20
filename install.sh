@@ -41,7 +41,7 @@ fi
 
 #download quadcopter control folder from github
 sudo apt-get install git
-git clone https://github.com/JMills93/TrackingQuadControl.git
+git clone https://github.com/JBannwarth/TrackingQuadControl.git
 cd TrackingQuadControl
 cd src
 sudo rm -rf geometry
@@ -77,16 +77,16 @@ source /opt/ros/indigo/setup.bash
 catkin_make
 source devel/setup.bash
 
-#downloading and installing python
-wget http://www.python.org/ftp/python/2.7.6/Python-2.7.6.tgz
-tar -xzf Python-2.7.6.tgz 
-cd Python-2.7.6
-./configure 
-make
-sudo make install
-cd ..
-rm -f Python-2.7.6.tgz
-rm -rf Python-2.7.6
+# downloading and installing python - breaks installation
+# wget http://www.python.org/ftp/python/2.7.6/Python-2.7.6.tgz
+# tar -xzf Python-2.7.6.tgz 
+# cd Python-2.7.6
+# ./configure 
+# make
+# sudo make install
+# cd ..
+# rm -f Python-2.7.6.tgz
+# rm -rf Python-2.7.6
 
 #download and install UI environment and python ui compiler
 wget http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.11.2/PyQt-x11-gpl-4.11.2.tar.gz
