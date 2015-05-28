@@ -1,5 +1,6 @@
 #!/bin/bash
-#author: Jay Mills 19/02/2015
+# Author: Jay Mills 19/02/2015
+# Edited: Jeremie Bannwarth 28/05/2015
 # Install ROS environment, as well as the quadcopter control program and dependencies
 # Place in folder you want the control software to be placed
 
