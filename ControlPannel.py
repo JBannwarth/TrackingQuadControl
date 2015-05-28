@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'ControlPannel.ui'
 #
-# Created: Wed May 13 14:42:15 2015
-#      by: PyQt4 UI code generator 4.11.2
+# Created: Thu May 28 12:31:27 2015
+#      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -32,7 +32,7 @@ class Ui_ControlPannel(object):
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.tabWidget = QtGui.QTabWidget(self.centralwidget)
         self.tabWidget.setEnabled(True)
-        self.tabWidget.setGeometry(QtCore.QRect(10, 10, 411, 421))
+        self.tabWidget.setGeometry(QtCore.QRect(20, 10, 411, 421))
         self.tabWidget.setFocusPolicy(QtCore.Qt.NoFocus)
         self.tabWidget.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
         self.tabWidget.setObjectName(_fromUtf8("tabWidget"))
@@ -423,7 +423,7 @@ class Ui_ControlPannel(object):
         self.label_8.setText(_translate("ControlPannel", "X Position", None))
         self.label_12.setText(_translate("ControlPannel", "Y Position", None))
         self.label_13.setText(_translate("ControlPannel", "Z Position", None))
-        self.label_15.setText(_translate("ControlPannel", "Yaw", None))
+        self.label_15.setText(_translate("ControlPannel", "Yaw 1", None))
         self.goto_x_position_box.setText(_translate("ControlPannel", "0", None))
         self.goto_y_position_box.setText(_translate("ControlPannel", "0", None))
         self.goto_z_position_box.setText(_translate("ControlPannel", "0", None))

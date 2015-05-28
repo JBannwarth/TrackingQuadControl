@@ -1,103 +1,74 @@
 #!/bin/bash
 #author: Jay Mills 19/02/2015
-#installs ROS environment, as well as the quadcopter control program and dependancies
-#place in folder you want the control software to be placed, 
-#run by: ./install.sh
+# Install ROS environment, as well as the quadcopter control program and dependencies
+# Place in folder you want the control software to be placed
 
+### Exit bash script if something fails
+set -e
 
-#checks ubuntu version number
-for ((i=1;; i++)); do
-    read "d$i" || break;
-done < /etc/lsb-release
-release_number=$d2
-echo $release_number
+### Install ROS
+echo "installing ROS Indigo"
 
-#installs ROS
-if [ "$release_number" == "DISTRIB_RELEASE=14.04" ]
-then
-	echo "installing ROS Indigo"
-	sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu trusty main" > /etc/apt/sources.list.d/ros-latest.list'
-	wget https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -O - | sudo apt-key add -
-	sudo apt-get update
-	sudo apt-get install ros-indigo-desktop-full
-	sudo rosdep init
-	rosdep update
-	echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc
-	source ~/.bashrc
-	sudo apt-get install python-rosinstall	
-elif [ "$release_number" == "DISTRIB_RELEASE=13.10" ]
-then
-	echo "installing ROS Indigo"
-	sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu saucy main" > /etc/apt/sources.list.d/ros-latest.list'
-	wget https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -O - | sudo apt-key add -
-	sudo apt-get update
-	sudo apt-get install ros-indigo-desktop-full
-	sudo rosdep init
-	rosdep update
-	echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc
-	source ~/.bashrc
-	sudo apt-get install python-rosinstall
-fi
+sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu trusty main" > /etc/apt/sources.list.d/ros-latest.list'
+wget https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -O - | sudo apt-key add -
+sudo apt-get update
+sudo apt-get install ros-indigo-desktop-full
 
-#download quadcopter control folder from github
+sudo rosdep init
+rosdep update
+
+echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc
+source ~/.bashrc
+
+sudo apt-get install python-rosinstall
+
+### Download quadcopter control folder from github
 sudo apt-get install git
 git clone https://github.com/JBannwarth/TrackingQuadControl.git
+
 cd TrackingQuadControl
 cd src
+
 sudo rm -rf geometry
 sudo rm -rf roscopter
-git clone https://github.com/ros/geometry.git
-git clone https://code.google.com/p/gt-ros-pkg.hrl/
-cd ..
-mv src/gt-ros-pkg.hrl/ros_vrpn_client src
-cd src
-rm -rf gt-ros-pkg.hrl
-git clone https://github.com/cberzan/roscopter.git
-cd roscopter
-sudo rm -rf mavlink
-git clone https://github.com/mavlink/mavlink.git
+sudo rm -rf ros_vrpn_client
+
+# Get customised packages from onedrive
+wget https://onedrive.live.com/download?resid=8f8e9b2f733222e5%2113522 -O geometry.tar.gz
+wget https://onedrive.live.com/download?resid=8f8e9b2f733222e5%2113525 -O roscopter.tar.gz
+wget https://onedrive.live.com/download?resid=8f8e9b2f733222e5%2113526 -O ros_vrpn_client.tar.gz
+
+tar -zxvf geometry.tar.gz
+tar -zxvf roscopter.tar.gz
+tar -zxvf ros_vrpn_client.tar.gz
 
 
-#installing dependancies
+# Install pymavlink
+cd roscopter/mavlink/pymavlink
+python setup.py install --user
+
+echo "export PYTHONPATH="$HOME/.local/lib/python2.6/site-packages/:$PYTHONPATH"" >> ~/.bashrc
+echo "export PATH="$HOME/.local/lib/python2.6/bin/:$PATH"" >> ~/.bashrc
+source ~/.bashrc
+
+cd ../../..
+
+### Install dependencies
 sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu precise main" > /etc/apt/sources.list.d/ros-latest.list'
 wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
 sudo apt-get update
 sudo apt-get install ros-hydro-sensor-msgs python-serial python-tz
 
-# export ROS_PACKAGE_PATH=~/TrackingQuadControl/src/roscopter:$ROS_PACKAGE_PATH (path might change)
+export ROS_PACKAGE_PATH=$(pwd)/roscopter:$ROS_PACKAGE_PATH
 rosdep update
 rosdep install roscopter
 
-# For mavlink, add export PYTHONPATH="${PYTHONPATH}:~/TrackingQuadControl/src/roscopter/mavlink" to ~/.bashrc
-
-#building quadcopter control softwre
+### Build quadcopter control software
 cd ..
 cd ..
 source /opt/ros/indigo/setup.bash
 catkin_make
 source devel/setup.bash
 
-# downloading and installing python - breaks installation
-# wget http://www.python.org/ftp/python/2.7.6/Python-2.7.6.tgz
-# tar -xzf Python-2.7.6.tgz 
-# cd Python-2.7.6
-# ./configure 
-# make
-# sudo make install
-# cd ..
-# rm -f Python-2.7.6.tgz
-# rm -rf Python-2.7.6
-
-#download and install UI environment and python ui compiler
-wget http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.11.2/PyQt-x11-gpl-4.11.2.tar.gz
-tar -zxvf PyQt-x11-gpl-4.11.2.tar.gz
-timestamp "Installing PyQt"
-cd ../PyQt-x11-gpl-4.11.2/
-sudo sed -i 's/resp = sys.stdin.readline()/resp = "yes"/g' configure-ng.py
-python configure-ng.py
-make
-make install
-rm -f PyQt-x11-gpl-4.11.2.tar.gz
-rm -rf PyQt-x11-gpl-4.11.2
-
-
+### Download and install UI design environment
+sudo apt-get install pyqt4-dev-tools qt4-dev-tools qt4-designer

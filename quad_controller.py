@@ -92,8 +92,6 @@ class ControlSystem(Thread):
     min_throttle_pwm = 1093
     throttle_control_setting = 0.0
 
-    i = 0
-
     # initialising the thread subclass
     def __init__(self):
         Thread.__init__(self)
@@ -133,8 +131,8 @@ class ControlSystem(Thread):
         quad1.update_pos_values()
 
         # claculates the control errors, adjust for required errors
-        self.calc_error(quad1.pos_x, quad1.pos_y, quad1.pos_z, quad1.yaw, self.target_x, self.target_y, self.target_z,
-                        self.target_yaw)
+        self.calc_error(quad1.pos_x, quad1.pos_y, quad1.pos_z, quad1.yaw,
+                self.target_x, self.target_y, self.target_z, self.target_yaw)
 
         # checks if the prpogram is allowed to control the quadcopter
         if quad1.have_control:
@@ -186,40 +184,36 @@ class ControlSystem(Thread):
 
             #convert control numbers to pwm periods
             throttle_pwm = self.calc_pwm_throttle(self.throttle_control_setting)
-
+            #print time.time(), throttle_pwm, quad1.ch3
 
             #send off mavlink commands
             quad1.send_channel_pwm(0,0,throttle_pwm, 0)
 
             #writing position and targets to the log file
             self.log_file.write(
-                           str(time.time()) + ': Current Position (x, y, z, yaw): ' + str(round(quad1.pos_x, 4))
-                           + ', ' + str(round(quad1.pos_y, 4)) + ', ' + str(round(quad1.pos_z, 4)) + ', '
-                           + str(round(quad1.yaw, 4)) +
-                           "\n               Target Position  (x, y, z, yaw): " + str(round(self.target_x, 4)) + ', '
-                           + str(round(self.target_y, 4)) + ', ' + str(round(self.target_z, 4)) + ', ' +
-                           str(round(self.target_yaw, 4) + "\n")
-                           )
+                    str(time.time()) + ': Current Position (x, y, z, yaw): '
+                    + str(round(quad1.pos_x, 0)) + ', '
+                    + str(round(quad1.pos_y, 0)) + ', '
+                    + str(round(quad1.pos_y, 0)) + ', '
+                    + str(round(quad1.yaw, 0)) + "\n               Target Position  (x, y, z, yaw): "
+                    + str(round(self.target_x, 0)) + ', '
+                    + str(round(self.target_y, 0)) + ', '
+                    + str(round(self.target_z, 0)) + ', '
+                    + str(round(self.target_yaw, 0)) + "\n")
         else:
             #writing position and targets to the log file
-            self.log_file.write(str(time.time()) + ': Current Position (x, y, z, yaw): ' + str(quad1.pos_x)
-                           + ', ' + str(quad1.pos_y) + ', ' + str(quad1.pos_y) + ', ' + str(quad1.yaw) +
-                           "\n")
-
+            self.log_file.write(
+                    str(time.time()) + ': Current Position (x, y, z, yaw): '
+                    + str(round(quad1.pos_x, 0)) + ', '
+                    + str(round(quad1.pos_y, 0)) + ', '
+                    + str(round(quad1.pos_y, 0)) + ', '
+                    + str(round(quad1.yaw, 0)) + "\n")
             quad1.disconnect_pwm_channels()
-
         # calls for the ui to be updated
         ui.update()
-        if self.i == 20:
-            if quad1.have_control:
-                print time.time(), quad1.ch3, throttle_pwm
-            else:
-                print time.time(), quad1.ch3
-            self.i = 0
-        else:
-            self.i += 1
 
-    # returns error in terms of roll, pitch, yaw and throttle direction dist
+
+    # returns error in terms of roll, pitch, yaw and throttle direction distances
     def calc_error(self, x, y, z, yaw, target_x, target_y, target_z, target_yaw):
 
         # converts targets from tracking frame of reference to the quadcopter frame of reference
@@ -490,7 +484,7 @@ class Quadcopter(Thread, RigidBody):
     # sends pwm to specified control channels, ch1-ch4, a setting of 0 gives back control to the transmitter
     def send_channel_pwm(self, roll, pitch, throttle, yaw):
         #throttle: high is up
-        #yaw: high is yaw right
+        # yaw: high is yaw right
         #pitch: high is pitch up
         #roll: high is roll right
 
@@ -533,7 +527,7 @@ class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
         self.ch_box_8.setText(str(round(quad1.ch8, 4)))
 
         # debugging boxes
-        '''self.box_1.setText(str(round(controller.altitude_control.p_effort_z, 4)))
+        self.box_1.setText(str(round(controller.altitude_control.p_effort_z, 4)))
         self.box_2.setText(str(round(controller.altitude_control.i_effort_z, 4)))
         self.box_3.setText(str(round(controller.altitude_control.d_effort_z, 4)))
         self.box_4.setText(str(round(controller.altitude_control.desired_accel_z, 4)))
@@ -544,7 +538,7 @@ class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
         self.box_9.setText(str(round(controller.target_x, 4)))
         self.box_10.setText(str(round(controller.target_y, 4)))
         self.box_11.setText(str(round(quad1.pos_x, 4)))
-        self.box_12.setText(str(round(quad1.pos_y, 4)))'''
+        self.box_12.setText(str(round(quad1.pos_y, 4)))
 
         if quad1.have_control and not controller.takeoff_command and not controller.land_command:
             if (quad1.pos_z < controller.land_z + 5):
@@ -689,6 +683,7 @@ class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
         # informs the user of the updated target position and orientation via the terminal
         print"Going to x:", controller.target_x, " y:", controller.target_y, " z:", controller.target_z, " yaw:", \
             controller.target_yaw
+
 
 # sets up the GUI
 import sys

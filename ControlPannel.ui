@@ -26,7 +26,7 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>20</x>
       <y>10</y>
       <width>411</width>
       <height>421</height>
@@ -415,7 +415,7 @@
           <item>
            <widget class="QLabel" name="label_15">
             <property name="text">
-             <string>Yaw</string>
+             <string>Yaw 1</string>
             </property>
            </widget>
           </item>
