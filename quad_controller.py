@@ -583,7 +583,7 @@ class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
                     self.take_off_land_button.setText("Takeoff")
                     print "Landing"
             else:
-                print"Please take over control first"
+                print "Please take over control first"
         else:
             print "Please set the land position"
 
@@ -596,7 +596,7 @@ class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
         controller.land_yaw = quad1.yaw
         self.land_position_set = True
 
-        print"Land position is now x:", controller.land_x, " y:", controller.land_y, " z:", controller.land_z
+        print "Land position is now x:", controller.land_x, " y:", controller.land_y, " z:", controller.land_z
 
     # toggles between computer control and transmitter control of the quadcopter
     def control_toggle(self):
@@ -610,7 +610,7 @@ class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
                 # gives back control and updates the text on the control button
                 quad1.have_control = False
                 self.control_toggle_button.setText("Take Over Control")
-                print"You no longer have control"
+                print "You no longer have control"
                 # quad1.disconnect_pwm_channels() # used to enable transmitter control
 
             else:
@@ -636,7 +636,7 @@ class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
                 controller.target_z = quad1.pos_z
                 print controller.target_z
                 controller.target_yaw = quad1.yaw
-                print"You now have control, stabilizing about x:", controller.target_x, " y:", controller.target_y, \
+                print "You now have control, stabilizing about x:", controller.target_x, " y:", controller.target_y, \
                     " z:", controller.target_z, " yaw: ", controller.target_yaw
 
                 #turns on the right controller
@@ -649,7 +649,7 @@ class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
         else:
             # ensures the computer doensnt have control and informs the user via the terminal
             quad1.have_control = False
-            print"You cannot take control transmitter has control, please switch channel 5 before trying to take over"
+            print "You cannot take control transmitter has control, please switch channel 5 before trying to take over"
 
     # sets the zero position
     def set_zero_position(self):
@@ -660,7 +660,7 @@ class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
         self.zero_z = quad1.rigid_body_z
 
         # informs the user of the updated zero position in the tracking reference frame via the terminal
-        print"Zero position is now x:", self.zero_x, " y:", self.zero_y, " z:", self.zero_z
+        print "Zero position is now x:", self.zero_x, " y:", self.zero_y, " z:", self.zero_z
 
     # sets the zero orientation
     def set_zero_orientation(self):
@@ -669,7 +669,7 @@ class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
         self.zero_yaw = quad1.rigid_body_yaw
 
         # informs the user of the updated zero orientation in the tracking reference frame via the terminal
-        print"Zero orientaton is now yaw:", quad1.rigid_body_yaw
+        print "Zero orientaton is now yaw:", quad1.rigid_body_yaw
 
     # sets the target positions
     def goto_position(self):
@@ -681,7 +681,7 @@ class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
         controller.target_yaw = self.zero_yaw + float(self.goto_yaw_box.text())
 
         # informs the user of the updated target position and orientation via the terminal
-        print"Going to x:", controller.target_x, " y:", controller.target_y, " z:", controller.target_z, " yaw:", \
+        print "Going to x:", controller.target_x, " y:", controller.target_y," z:", controller.target_z, " yaw:", \
             controller.target_yaw
 
 
