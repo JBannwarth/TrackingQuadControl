@@ -8,8 +8,10 @@ This is the first version of the quadcopter controller running off Vicon measure
 
 The altitude controller is experimental at the moment, and does not currently have an attitude controller
 
-
 ## Installing
+The install.sh bash script contains all the commands required to install this software. You can either run the bash script or copy the commands one by one in the terminal. **I recommend running the commands one by one in the terminal, as it will make debugging easier.**
+
+If you want to install the software using the bash script:
 - Download install.sh and place in directory you want to download the software to
 - In a terminal go to directory install.sh is and run: `./install.sh`
 - The install process will take a few minutes depending on the Internet connection

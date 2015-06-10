@@ -43,6 +43,9 @@ tar -zxvf geometry.tar.gz
 tar -zxvf roscopter.tar.gz
 tar -zxvf ros_vrpn_client.tar.gz
 
+rm geometry.tar.gz
+rm -zxvf roscopter.tar.gz
+rm ros_vrpn_client.tar.gz
 
 # Install pymavlink
 cd roscopter/mavlink/pymavlink
@@ -65,7 +68,6 @@ rosdep update
 rosdep install roscopter
 
 ### Build quadcopter control software
-cd ..
 cd ..
 source /opt/ros/indigo/setup.bash
 catkin_make
