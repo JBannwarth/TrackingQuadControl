@@ -20,13 +20,19 @@ If you want to install the software using the bash script:
 
 
 ## Running the Program
-- Connect an Ethernet cable to the computer running ros, make sure your Ethernet IPv4 settings are as follow: `Address = 10.0.0.20`, `Netmask = 255.0.0.0`, `Gateway = 10.0.0.10`
+- Connect an Ethernet cable between your computer and the computer running Vicon Tracker. As of June 2015, use the free ethernet port on the PC's networking card
+- Make sure your Ethernet IPv4 settings are as follow: `Address = 10.0.0.20`, `Netmask = 255.0.0.0`, `Gateway = 10.0.0.10` (click on the connection icon in the Ubuntu menu bar - it can look like a wireless signal icon or two arrows depending on whether your wireless adaptor is enabled or not -, click on Edit connections, choose your ethernet connection and click Edit, click on the Edit IPv4 settings tab, set the connection mode to manual and set the Address, Netmask and Gateway settings accordingly)
+- Use Vicon Tracker to start tracking an object (when an object is added in Vicon Tracker it starts being streamed automatically using the VRPN protocol):
+  - Run vicon according to instructions
+  - Place the object in the cameras' field of view
+  - Select the markers on the screen associated with the object (ctrl+left click)
+  - In the "Object" pane, at the bottom, enter a name for the object and click "create"
 - Run commands in separate terminals:
   - `roscore`
   - `./run_vrpn_client.sh name` (for all required tracked objects)
 	(where name is replaced with name of object being tracked)
   - `python quad_controller.py`
-- After running `./run_vrpn_client.sh`, in a new terminal run: `rostopic echo /name/pose`. This should have a stream of data if connected properly, (name being replaced with name of object
+- After running `./run_vrpn_client.sh`, in a new terminal run: `rostopic echo /name/pose`. This should have a stream of data if connected properly (name being replaced with name of object)
 
 ## Problems with Running
 Most known problems can be fixed by running:
