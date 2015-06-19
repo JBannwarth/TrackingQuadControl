@@ -25,15 +25,15 @@ from PyQt4 import QtCore, QtGui
 import ControlPannel
 from rigid_body import RigidBody
 
-mavlink_dir = os.path.realpath(os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    'mavlink'))
-sys.path.insert(0, mavlink_dir)
-
-pymavlink_dir = os.path.join(mavlink_dir, 'pymavlink')
-sys.path.insert(0, pymavlink_dir)
-
-from pymavlink import mavutil
+# mavlink_dir = os.path.realpath(os.path.join(
+#     os.path.dirname(os.path.realpath(__file__)),
+#     'mavlink'))
+# sys.path.insert(0, mavlink_dir)
+#
+# pymavlink_dir = os.path.join(mavlink_dir, 'pymavlink')
+# sys.path.insert(0, pymavlink_dir)
+#
+# from pymavlink import mavutil
 
 
 # the below is needed for the ui setup
@@ -285,88 +285,88 @@ class Quadcopter(Thread, RigidBody):
         self.send_odometry = TransformStamped()
         self.pub_odom = rospy.Publisher('/controller_send', TransformStamped)
 
-        self.master = mavutil.mavlink_connection(self.device, self.baud)
-        if self.device is None:
-            print("You must specify a serial device")
-            sys.exit(1)
+        # self.master = mavutil.mavlink_connection(self.device, self.baud)
+        # if self.device is None:
+        #    print("You must specify a serial device")
+        #    sys.exit(1)
 
         #device = "/dev/ttyACM0"
         #baud=11520
 
-        self.pub_state = rospy.Publisher('state', roscopter.msg.State)
-        self.pub_vfr_hud = rospy.Publisher('vfr_hud', roscopter.msg.VFR_HUD)
-        self.pub_attitude = rospy.Publisher('attitude', roscopter.msg.Attitude)
-        self.pub_raw_imu = rospy.Publisher('raw_imu', roscopter.msg.Mavlink_RAW_IMU)
-        self.pub_gps = rospy.Publisher('gps', NavSatFix)
-        self.pub_rc = rospy.Publisher('rc', roscopter.msg.RC)
+        # self.pub_state = rospy.Publisher('state', roscopter.msg.State)
+        # self.pub_vfr_hud = rospy.Publisher('vfr_hud', roscopter.msg.VFR_HUD)
+        # self.pub_attitude = rospy.Publisher('attitude', roscopter.msg.Attitude)
+        # self.pub_raw_imu = rospy.Publisher('raw_imu', roscopter.msg.Mavlink_RAW_IMU)
+        # self.pub_gps = rospy.Publisher('gps', NavSatFix)
+        # self.pub_rc = rospy.Publisher('rc', roscopter.msg.RC)
 
         rospy.init_node('roscopter')
         rospy.Rate(100)
         rospy.Subscriber("/" + self.name + "/pose", TransformStamped, self.get_rigid_body)
         #wait for a heartbeat so we know the target system IDs
-        print("Waiting for APM heartbeat...")
-        self.master.wait_heartbeat()
-        print("Heartbeat from APM (system %u component %u)" % (self.master.target_system, self.master.target_system))
+        # print("Waiting for APM heartbeat...")
+        # self.master.wait_heartbeat()
+        # print("Heartbeat from APM (system %u component %u)" % (self.master.target_system, self.master.target_system))
 
         # requests data streams from the quadcopter over mavlink, options are stated in the function
-        self.request_data_stream("rc_channels", 50, 1)
+        # self.request_data_stream("rc_channels", 50, 1)
         # imu values
-        self.request_data_stream("extra1", 50, 1)
+        # self.request_data_stream("extra1", 50, 1)
 
     #same as the threaded function, just runs once
     def run2(self):
         # stores message from the quadcopter
-        msg = self.master.recv_match(blocking=False)
-        if msg:
-            # stores the message type
-            msg_type = msg.get_type()
-            #print msg_type # debugging to check which data streams are operational
-
-            # checks if the message contains information
-            if msg.get_type() == "BAD_DATA":
-                if mavutil.all_printable(msg.data):
-                    sys.stdout.write(msg.data)
-                    sys.stdout.flush()
-            else:
-                # add in new messages to monitor below
-                if msg_type == "ATTITUDE":
-
-                    # publishes information to the rostopic
-                    self.pub_attitude.publish(msg.roll * 180 / 3.1415, msg.pitch * 180 / 3.1415,
-                                              msg.yaw * 180 / 3.1415, msg.rollspeed, msg.pitchspeed, msg.yawspeed)
-
-                    #upadtes imu values
-                    self.imu_yaw = msg.yaw * 180 / 3.14159
-                    self.imu_roll = msg.roll * 180 / 3.14159
-                    self.imu_pitch = msg.pitch * 180 / 3.14159
-
-                # updates the channel data
-                elif msg_type == "RC_CHANNELS_RAW":
-                    self.ch1 = msg.chan1_raw
-                    self.ch2 = msg.chan2_raw
-                    self.ch3 = msg.chan3_raw
-                    self.ch4 = msg.chan4_raw
-                    self.ch5 = msg.chan5_raw
-                    self.ch6 = msg.chan6_raw
-                    self.ch7 = msg.chan7_raw
-                    self.ch8 = msg.chan8_raw
-
-        #checks if channel 5 is below the threshold and gives back control to the transmitter
-        if self.ch5 < 1400:
-            if not self.transmitter_control:
-                if self.have_control:
-
-                    # informs via terminal
-                    print "You no longer have control, Transmitter has taken over control"
-                    self.transmitter_control = True
-                    self.have_control = False
-
-                    # changes the control message on the ui
-                    ui.control_toggle_button.setText("Take Over Control")
-                    self.disconnect_pwm_channels()
-        else:
-            # turns off transmitter control so that the program is able to take over when requested
-            self.transmitter_control = False
+        #  msg = self.master.recv_match(blocking=False)
+        # if msg:
+        #     # stores the message type
+        #     #msg_type = msg.get_type()
+        #     #print msg_type # debugging to check which data streams are operational
+        #
+        #     # checks if the message contains information
+        #     if msg.get_type() == "BAD_DATA":
+        #         if mavutil.all_printable(msg.data):
+        #             sys.stdout.write(msg.data)
+        #             sys.stdout.flush()
+        #     else:
+        #         # add in new messages to monitor below
+        #         if msg_type == "ATTITUDE":
+        #
+        #             # publishes information to the rostopic
+        #             self.pub_attitude.publish(msg.roll * 180 / 3.1415, msg.pitch * 180 / 3.1415,
+        #                                       msg.yaw * 180 / 3.1415, msg.rollspeed, msg.pitchspeed, msg.yawspeed)
+        #
+        #             #upadtes imu values
+        #             self.imu_yaw = msg.yaw * 180 / 3.14159
+        #             self.imu_roll = msg.roll * 180 / 3.14159
+        #             self.imu_pitch = msg.pitch * 180 / 3.14159
+        #
+        #         # updates the channel data
+        #         elif msg_type == "RC_CHANNELS_RAW":
+        #             self.ch1 = msg.chan1_raw
+        #             self.ch2 = msg.chan2_raw
+        #             self.ch3 = msg.chan3_raw
+        #             self.ch4 = msg.chan4_raw
+        #             self.ch5 = msg.chan5_raw
+        #             self.ch6 = msg.chan6_raw
+        #             self.ch7 = msg.chan7_raw
+        #             self.ch8 = msg.chan8_raw
+        #
+        # #checks if channel 5 is below the threshold and gives back control to the transmitter
+        # if self.ch5 < 1400:
+        #     if not self.transmitter_control:
+        #         if self.have_control:
+        #
+        #             # informs via terminal
+        #             print "You no longer have control, Transmitter has taken over control"
+        #             self.transmitter_control = True
+        #             self.have_control = False
+        #
+        #             # changes the control message on the ui
+        #             ui.control_toggle_button.setText("Take Over Control")
+        #             self.disconnect_pwm_channels()
+        # else:
+        #     # turns off transmitter control so that the program is able to take over when requested
+        #     self.transmitter_control = False
 
     #takes in all messages from the quadcopter and interperates them
     def run(self):
@@ -375,107 +375,107 @@ class Quadcopter(Thread, RigidBody):
         while 1:
 
             # stores message from the quadcopter
-            msg = self.master.recv_match(blocking=False)
-            if msg:
-                # stores the message type
-                msg_type = msg.get_type()
-                #print msg_type # debugging to check which data streams are operational
-
-                # checks if the message contains information
-                if msg.get_type() == "BAD_DATA":
-                    if mavutil.all_printable(msg.data):
-                        sys.stdout.write(msg.data)
-                        sys.stdout.flush()
-                else:
-                    # add in new messages to monitor below
-                    if msg_type == "ATTITUDE":
-
-                        # publishes information to the rostopic
-                        self.pub_attitude.publish(msg.roll * 180 / 3.1415, msg.pitch * 180 / 3.1415,
-                                                  msg.yaw * 180 / 3.1415, msg.rollspeed, msg.pitchspeed, msg.yawspeed)
-
-                        #upadtes imu values
-                        self.imu_yaw = msg.yaw * 180 / 3.14159
-                        self.imu_roll = msg.roll * 180 / 3.14159
-                        self.imu_pitch = msg.pitch * 180 / 3.14159
-
-                    # updates the channel data
-                    elif msg_type == "RC_CHANNELS_RAW":
-                        self.ch1 = msg.chan1_raw
-                        self.ch2 = msg.chan2_raw
-                        self.ch3 = msg.chan3_raw
-                        self.ch4 = msg.chan4_raw
-                        self.ch5 = msg.chan5_raw
-                        self.ch6 = msg.chan6_raw
-                        self.ch7 = msg.chan7_raw
-                        self.ch8 = msg.chan8_raw
-
-
-            #checks if channel 5 is below the threshold and gives back control to the transmitter
-            if self.ch5 < 1400:
-                if not self.transmitter_control:
-                    if self.have_control:
-
-                        # informs via terminal
-                        print "You no longer have control, Transmitter has taken over control"
-                        self.transmitter_control = True
-                        self.have_control = False
-
-                        # changes the control message on the ui
-                        ui.control_toggle_button.setText("Take Over Control")
-                        self.disconnect_pwm_channels()
-            else:
-                # turns off transmitter control so that the program is able to take over when requested
-                self.transmitter_control = False
-            time.sleep(0.01)
+            # msg = self.master.recv_match(blocking=False)
+            # if msg:
+            #     # stores the message type
+            #     msg_type = msg.get_type()
+            #     #print msg_type # debugging to check which data streams are operational
+            #
+            #     # checks if the message contains information
+            #     if msg.get_type() == "BAD_DATA":
+            #         if mavutil.all_printable(msg.data):
+            #             sys.stdout.write(msg.data)
+            #             sys.stdout.flush()
+            #     else:
+            #         # add in new messages to monitor below
+            #         if msg_type == "ATTITUDE":
+            #
+            #             # publishes information to the rostopic
+            #             self.pub_attitude.publish(msg.roll * 180 / 3.1415, msg.pitch * 180 / 3.1415,
+            #                                       msg.yaw * 180 / 3.1415, msg.rollspeed, msg.pitchspeed, msg.yawspeed)
+            #
+            #             #upadtes imu values
+            #             self.imu_yaw = msg.yaw * 180 / 3.14159
+            #             self.imu_roll = msg.roll * 180 / 3.14159
+            #             self.imu_pitch = msg.pitch * 180 / 3.14159
+            #
+            #         # updates the channel data
+            #         elif msg_type == "RC_CHANNELS_RAW":
+            #             self.ch1 = msg.chan1_raw
+            #             self.ch2 = msg.chan2_raw
+            #             self.ch3 = msg.chan3_raw
+            #             self.ch4 = msg.chan4_raw
+            #             self.ch5 = msg.chan5_raw
+            #             self.ch6 = msg.chan6_raw
+            #             self.ch7 = msg.chan7_raw
+            #             self.ch8 = msg.chan8_raw
+            #
+            #
+            # #checks if channel 5 is below the threshold and gives back control to the transmitter
+            # if self.ch5 < 1400:
+            #     if not self.transmitter_control:
+            #         if self.have_control:
+            #
+            #             # informs via terminal
+            #             print "You no longer have control, Transmitter has taken over control"
+            #             self.transmitter_control = True
+            #             self.have_control = False
+            #
+            #             # changes the control message on the ui
+            #             ui.control_toggle_button.setText("Take Over Control")
+            #             self.disconnect_pwm_channels()
+            # else:
+            #     # turns off transmitter control so that the program is able to take over when requested
+            #     self.transmitter_control = False
+            # time.sleep(0.01)
 
     # details the different types of messages able to be recieved from the quadcopter data stream
     def request_data_stream(self, request, frequency, on_off):
         # on_off of 1 turns on the data stream, value of 0 turns off
 
-        system = self.master.target_system
-        component = self.master.target_component
-        send = mavutil.mavlink.MAV_DATA_STREAM_RC_CHANNELS
-
-        # all data streams will be enabled
-        if request == "all":
-            send = mavutil.mavlink.MAV_DATA_STREAM_ALL
-            send_true = True
-        # servo_output_raw, rc_channels_raw
-        elif request == "rc_channels":
-            send = mavutil.mavlink.MAV_DATA_STREAM_RC_CHANNELS
-            send_true = True
-        # scaled_pressure, sensor_offsets, raw_imu
-        elif request == "raw_sensor":
-            send = mavutil.mavlink.MAV_DATA_STREAM_RAW_SENSORS
-            send_true = True
-        # meminfo, mission_current, mav_controller_output, sys_status
-        elif request == "extended_status":
-            send = mavutil.mavlink.MAV_DATA_STREAM_EXTENDED_STATUS
-            send_true = True
-        # gobal_position_int
-        elif request == "stream_position":
-            send = mavutil.mavlink.MAV_DATA_STREAM_POSITION
-            send_true = True
-        # attitude
-        elif request == "extra1":
-            send = mavutil.mavlink.MAV_DATA_STREAM_EXTRA1
-            send_true = True
-        # vrf_hud
-        elif request == "extra2":
-            send = mavutil.mavlink.MAV_DATA_STREAM_EXTRA2
-            send_true = True
-        # ahrs, hwstatus, system_time
-        elif request == "extra3":
-            send = mavutil.mavlink.MAV_DATA_STREAM_EXTRA3
-            send_true = True
-        else:
-            send_true = False
-
-        # checks if the requested data type is valid
-        if send_true:
-            # requests data stream from the autopilot
-            self.master.mav.request_data_stream_send(system, component, send, frequency, on_off)
+        # system = self.master.target_system
+        # component = self.master.target_component
+        # send = mavutil.mavlink.MAV_DATA_STREAM_RC_CHANNELS
+        #
+        # # all data streams will be enabled
+        # if request == "all":
+        #     send = mavutil.mavlink.MAV_DATA_STREAM_ALL
+        #     send_true = True
+        # # servo_output_raw, rc_channels_raw
+        # elif request == "rc_channels":
+        #     send = mavutil.mavlink.MAV_DATA_STREAM_RC_CHANNELS
+        #     send_true = True
+        # # scaled_pressure, sensor_offsets, raw_imu
+        # elif request == "raw_sensor":
+        #     send = mavutil.mavlink.MAV_DATA_STREAM_RAW_SENSORS
+        #     send_true = True
+        # # meminfo, mission_current, mav_controller_output, sys_status
+        # elif request == "extended_status":
+        #     send = mavutil.mavlink.MAV_DATA_STREAM_EXTENDED_STATUS
+        #     send_true = True
+        # # gobal_position_int
+        # elif request == "stream_position":
+        #     send = mavutil.mavlink.MAV_DATA_STREAM_POSITION
+        #     send_true = True
+        # # attitude
+        # elif request == "extra1":
+        #     send = mavutil.mavlink.MAV_DATA_STREAM_EXTRA1
+        #     send_true = True
+        # # vrf_hud
+        # elif request == "extra2":
+        #     send = mavutil.mavlink.MAV_DATA_STREAM_EXTRA2
+        #     send_true = True
+        # # ahrs, hwstatus, system_time
+        # elif request == "extra3":
+        #     send = mavutil.mavlink.MAV_DATA_STREAM_EXTRA3
+        #     send_true = True
+        # else:
+        #     send_true = False
+        #
+        # # checks if the requested data type is valid
+        # if send_true:
+        #     # requests data stream from the autopilot
+        #     self.master.mav.request_data_stream_send(system, component, send, frequency, on_off)
 
     # gives back control to the transmitter of all channels
     def disconnect_pwm_channels(self):
@@ -483,16 +483,18 @@ class Quadcopter(Thread, RigidBody):
 
     # sends pwm to specified control channels, ch1-ch4, a setting of 0 gives back control to the transmitter
     def send_channel_pwm(self, roll, pitch, throttle, yaw):
-        #throttle: high is up
-        # yaw: high is yaw right
-        #pitch: high is pitch up
-        #roll: high is roll right
+        # Throttle: high is up
+        # Yaw: high is yaw right
+        # Pitch: high is pitch up
+        # Roll: high is roll right
 
-        # gathers the system and component ID's
-        system = self.master.target_system
-        component = self.master.target_component
-        #sends off pwm commands
-        self.master.mav.rc_channels_override_send(system, component, roll, pitch, throttle, yaw, 0, 0, 0, 0)
+        # Gather the system and component ID's
+        # system = self.master.target_system
+        # component = self.master.target_component
+        # Send off pwm commands
+        # self.master.mav.rc_channels_override_send(system, component, roll, pitch, throttle, yaw, 0, 0, 0, 0)
+        print roll + " " + pitch + " " + throttle + " " + yaw + " " +
+            " " + 0 + " " + 0 + " " + 0 + " " + 0
 
 ########################################################################################################################
 class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
