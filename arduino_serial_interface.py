@@ -1,11 +1,17 @@
-__author__ = "Jeremie X. J. Bannwarth"
+""" @package arduino_serial_interface
+Documentation.
+
+More details.
+
+@author Jeremie Xavier Joseph Bannwarth
+"""
 
 import math
 import time
 import serial
 import struct
 
-class ArduRCSerialInterface:
+class ardu_rc_serial_interface:
     def __init__(self,
                  number_channels = 8,
                  min_space_width = 670,
@@ -55,22 +61,22 @@ class ArduRCSerialInterface:
 
 # ser = serial.Serial("/dev/ttyACM0",57600)
 # print ser.name
-arduInterface = ArduRCSerialInterface()
-val = 700
-l = [0]*8
-while True:
-    val = val + 1
-    if (val > 1500):
-        val = 700
-    l = [val]*8
-    arduInterface.update_channels(l)
-    arduInterface.send_data()
-    # arduInterface.print_channels()
-    # strToPrint = 's' + ','.join(map(str, l))
-    # print strToPrint
-    # ser.write(strToPrint)
-    # del strToPrint
-    time.sleep(0.0225)
-    # ser.flush()
-
-arduInterface.close()
+# arduInterface = ardu_rc_serial_interface()
+# val = 700
+# l = [0]*8
+# while True:
+#     val = val + 1
+#     if (val > 1500):
+#         val = 700
+#     l = [val]*8
+#     arduInterface.update_channels(l)
+#     arduInterface.send_data()
+#     # arduInterface.print_channels()
+#     # strToPrint = 's' + ','.join(map(str, l))
+#     # print strToPrint
+#     # ser.write(strToPrint)
+#     # del strToPrint
+#     time.sleep(0.0225)
+#     # ser.flush()
+#
+# arduInterface.close()

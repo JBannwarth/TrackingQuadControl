@@ -24,7 +24,7 @@ class AltControl:
 
     old_pos_z = 0.0
     old_vel_z = 0.0
-    
+
     pos_target_z = 0.0
     vel_target_z = 0.0
     accel_target_z = 0.0
@@ -48,7 +48,7 @@ class AltControl:
     d_effort_z = 000.000
     desired_accel_z = 0.0
 
-    
+
     #time constants for altitude (0.5 is equivalent to 2Hz cutoff frequency)
     vel_Tf_z = 0.5
     vel_estim_Tf_z = 0.5
@@ -83,7 +83,7 @@ class AltControl:
 
     def update_old_altitude(self, old_altitude):
         self.old_pos_z = old_altitude
-        
+
 
     # calculates the control effor require for altitude control
     def update_z_controller(self, altitude, old_altitude, altitude_target):
@@ -115,7 +115,7 @@ class AltControl:
             self.debug_count =0
         else:
             self.debug_count += 1
-        
+
         #update old position and velocity for next iteration
         self.old_vel_z = self.curr_vel_z
         return self.throttle_setting
@@ -138,7 +138,7 @@ class AltControl:
 
     #calculates the acceleration target from the velocity error
     def rate_to_accel_z(self):
-        
+
         #check if the target velocity exceeds the set limits
         self.velocity_limited = False
         if self.vel_target_z > self.speed_up_max:
@@ -176,11 +176,8 @@ class AltControl:
         self.i_effort_z = i_effort
         self.d_effort_z = d_effort
 
-
         #_attitude_control.set_throttle_out((int16_t)p+i+d+_throttle_hover, true); #in the range of 0-1000
         self.throttle_setting = p_effort + i_effort + d_effort + self.hover_throttle
-
-
 
     def reset_controller_z(self):
         self.accel_integral_z = 0.0

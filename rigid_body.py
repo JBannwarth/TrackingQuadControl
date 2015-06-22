@@ -74,19 +74,26 @@ class RigidBody(object):
         elif self.tracker == "Vicon":
             # linear position measurments and convert to cm
             self.rigid_body_x = (rigid_body_msg.transform.translation.x * 100)
-            self.rigid_body_y = (rigid_body_msg.transform.translation.z * 100)
-            self.rigid_body_z = -(rigid_body_msg.transform.translation.y * 100)
+            self.rigid_body_y = (rigid_body_msg.transform.translation.y * 100)
+            self.rigid_body_z = (rigid_body_msg.transform.translation.z * 100)
 
             # gets quaternion measurments
-            ry = rigid_body_msg.transform.rotation.x
-            rx = rigid_body_msg.transform.rotation.y
+            rx = rigid_body_msg.transform.rotation.x
+            ry = rigid_body_msg.transform.rotation.y
             rz = rigid_body_msg.transform.rotation.z
             rw = rigid_body_msg.transform.rotation.w
 
+            (temp_roll, temp_pitch, temp_yaw) = tf.transformations.euler_from_quaternion(
+                [rx, ry, rz, rw])
+
             #works out roll, pitch, yaw measurments
-            temp_yaw = math.atan2(2.0*(ry*rz + rw*rx), rw*rw - rx*rx - ry*ry + rz*rz)
-            temp_roll = math.asin(-2.0*(rx*rz - rw*ry))
-            temp_pitch = -math.atan2(2.0*(rx*ry + rw*rz), rw*rw + rx*rx - ry*ry - rz*rz)
+            # temp_yaw   =  math.atan2(2.0*(rx*ry + rw*rz), rw*rw + rx*rx - ry*ry - rz*rz)
+            # temp_pitch = -math.asin(2.0*(rw*ry - rx*rz))
+            # temp_roll  = -math.atan2(2.0*(ry*rz + rw*rx), -rw*rw + rx*rx + ry*ry - rz*rz)
+            # temp_roll  = math.atan2( 2.0*(ry*rw - rx*rz), 1.0 - 2.0*ry*ry - 2.0*rz*rz )
+            # temp_pitch = math.atan2( 2.0*(rx*rw - ry*rz), 1.0 - 2.0*rx*rx - 2.0*rz*rz )
+            # temp_yaw   = math.asin( 2.0*(rx*ry - rz*rw) )
+
             self.rigid_body_yaw = temp_yaw
             self.rigid_body_pitch = temp_pitch
             self.rigid_body_roll = temp_roll
@@ -97,8 +104,6 @@ class RigidBody(object):
         if self.rigid_body_yaw < -3.14159:
             self.rigid_body_yaw = self.rigid_body_yaw + (3.14159*2)
         # converts yaw into degrees
-
-
 
     # updates current and old position values
     def update_pos_values(self):

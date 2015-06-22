@@ -13,17 +13,18 @@ import os
 import sys
 import math
 import roslib
-roslib.load_manifest('roscopter')
+# roslib.load_manifest('roscopter')
 import rospy
-import roscopter.msg
+# import roscopter.msg
 import time
 from sensor_msgs.msg import NavSatFix
 from geometry_msgs.msg import TransformStamped
 from threading import Thread
-import AltitudeControl
+from altitude_control import altitude_controller
 from PyQt4 import QtCore, QtGui
 import ControlPannel
 from rigid_body import RigidBody
+from arduino_serial_interface import ardu_rc_serial_interface
 
 # mavlink_dir = os.path.realpath(os.path.join(
 #     os.path.dirname(os.path.realpath(__file__)),
@@ -56,11 +57,13 @@ except AttributeError:
 class ControlSystem(Thread):
 
     # refresh rate of the controller
-    control_rate = 100
-    period = 1 / float(control_rate)
+    period = 0.0225
+    control_rate = 1/period
 
     # this controller has not yet been tested
-    altitude_control = AltitudeControl.AltControl(period)
+    # altitude_control = AltitudeControl.AltControl(period)
+    altitude_ctrl = altitude_controller(period)
+    ardu_interface = ardu_rc_serial_interface()
 
     #target position of the quadcopter being controlled, units:cm
     target_x = 0.0
@@ -85,12 +88,18 @@ class ControlSystem(Thread):
     pitch_direction_error = 0.0
     roll_direction_error = 0.0
 
-    #pwm throttle settings and outputs
+    # pwm throttle settings and outputs
     pwm_throttle = 0.0
     max_throttle_pwm = 1948
     mid_throttle_pwm = 1500
     min_throttle_pwm = 1093
     throttle_control_setting = 0.0
+
+    throttle_ppm = 0
+    min_throttle_ppm = 670
+    mid_throttle_ppm = 1080
+    min_throttle_ppm = 1465
+    throttle_normalised = 0
 
     # initialising the thread subclass
     def __init__(self):
@@ -102,7 +111,6 @@ class ControlSystem(Thread):
 
     # this is the threaded function for this class, started by calling class.start()
     def run(self):
-
         try:
             print("Waiting")
             self.earliercmdtime = 0
@@ -126,7 +134,6 @@ class ControlSystem(Thread):
 
     # main control algorithm
     def control_loop(self):
-
         # updates the quad position, call update functions below for added rigib bodies
         quad1.update_pos_values()
 
@@ -134,110 +141,84 @@ class ControlSystem(Thread):
         self.calc_error(quad1.pos_x, quad1.pos_y, quad1.pos_z, quad1.yaw,
                 self.target_x, self.target_y, self.target_z, self.target_yaw)
 
+        self.altitude_ctrl.set_height_setpoint(target_z)
+        self.altitude_ctrl.update(quad1.pos_z)
+        throttle_normalised = altitude_ctrl.get_output()
+
         # checks if the prpogram is allowed to control the quadcopter
-        if quad1.have_control:
+        # if quad1.have_control:
+        #
+        #     if self.takeoff_command:
+        #
+        #         # resets controller after the quadcopter passes the altitude target
+        #         if quad1.pos_z > self.target_z:
+        #             self.altitude_control.hover_throttle += self.altitude_control.accel_integral_z
+        #             self.altitude_control.reset_controller_z()
+        #             self.altitude_control.accel_integral_max_z = 100
+        #             self.stabilize_command = True
+        #             self.takeoff_command = False
+        #
+        #         # calls experimental altitude controller, units:cm
+        #         self.throttle_control_setting = self.altitude_control.update_z_controller(quad1.pos_z, quad1.old_pos_z,
+        #                                                                                   controller.target_z)
+        #
+        #     elif self.land_command:
+        #         if ((quad1.pos_x < self.land_x + 10) and (quad1.pos_x > self.land_x - 10) and
+        #                 (quad1.pos_y < self.land_y + 10) and (quad1.pos_y > self.land_y - 10)  and
+        #                 (quad1.yaw < self.land_yaw + 5) and (quad1.yaw > self.land_yaw - 5)):
+        #             self.target_x = self.land_x
+        #             self.target_y = self.land_y
+        #             self.target_z = self.land_z
+        #             self.target_yaw = self.land_yaw
+        #
+        #             if quad1.pos_z < self.land_z + 5:
+        #                 self.target_x = quad1.pos_x
+        #                 self.target_y = quad1.pos_y
+        #                 self.target_z = quad1.land_z
+        #                 self.target_yaw = quad1.yaw
+        #
+        #         else:
+        #             self.target_x = self.land_x
+        #             self.target_y = self.land_y
+        #             self.target_z = quad1.pos_z
+        #             self.target_yaw = self.land_yaw
+        #
+        #         # calls experimental altitude controller, units:cm
+        #         self.throttle_control_setting = self.altitude_control.update_z_controller(quad1.pos_z, quad1.old_pos_z,
+        #                                                                                   controller.target_z)
+        #
+        #     else:
+        #         # calls experimental altitude controller, units:cm
+        #         self.throttle_control_setting = self.altitude_control.update_z_controller(quad1.pos_z, quad1.old_pos_z,
+        #                                                                                   controller.target_z)
 
-            if self.takeoff_command:
+        #convert control numbers to pwm periods
+        # throttle_pwm = self.calc_pwm_throttle(self.throttle_control_setting)
+        throttle_ppm = calc_throttle_ppm()
+        #print time.time(), throttle_pwm, quad1.ch3
 
-                # resets controller after the quadcopter passes the altitude target
-                if quad1.pos_z > self.target_z:
-                    self.altitude_control.hover_throttle += self.altitude_control.accel_integral_z
-                    self.altitude_control.reset_controller_z()
-                    self.altitude_control.accel_integral_max_z = 100
-                    self.stabilize_command = True
-                    self.takeoff_command = False
+        #writing position and targets to the log file
+        self.log_file.write(
+                str(time.time()) + ': Current Position (x, y, z, yaw): '
+                + str(round(quad1.pos_x, 0)) + ', '
+                + str(round(quad1.pos_y, 0)) + ', '
+                + str(round(quad1.pos_y, 0)) + ', '
+                + str(round(quad1.yaw, 0)) + "\n               Target Position  (x, y, z, yaw): "
+                + str(round(self.target_x, 0)) + ', '
+                + str(round(self.target_y, 0)) + ', '
+                + str(round(self.target_z, 0)) + ', '
+                + str(round(self.target_yaw, 0)) + "\n")
 
-                # calls experimental altitude controller, units:cm
-                self.throttle_control_setting = self.altitude_control.update_z_controller(quad1.pos_z, quad1.old_pos_z,
-                                                                                          controller.target_z)
-
-            elif self.land_command:
-
-                if ((quad1.pos_x < self.land_x + 10) and (quad1.pos_x > self.land_x - 10) and
-                        (quad1.pos_y < self.land_y + 10) and (quad1.pos_y > self.land_y - 10)  and
-                        (quad1.yaw < self.land_yaw + 5) and (quad1.yaw > self.land_yaw - 5)):
-                    self.target_x = self.land_x
-                    self.target_y = self.land_y
-                    self.target_z = self.land_z
-                    self.target_yaw = self.land_yaw
-
-                    if quad1.pos_z < self.land_z + 5:
-                        self.target_x = quad1.pos_x
-                        self.target_y = quad1.pos_y
-                        self.target_z = quad1.land_z
-                        self.target_yaw = quad1.yaw
-
-                else:
-                    self.target_x = self.land_x
-                    self.target_y = self.land_y
-                    self.target_z = quad1.pos_z
-                    self.target_yaw = self.land_yaw
-
-                # calls experimental altitude controller, units:cm
-                self.throttle_control_setting = self.altitude_control.update_z_controller(quad1.pos_z, quad1.old_pos_z,
-                                                                                          controller.target_z)
-
-            else:
-                # calls experimental altitude controller, units:cm
-                self.throttle_control_setting = self.altitude_control.update_z_controller(quad1.pos_z, quad1.old_pos_z,
-                                                                                          controller.target_z)
-
-            #convert control numbers to pwm periods
-            throttle_pwm = self.calc_pwm_throttle(self.throttle_control_setting)
-            #print time.time(), throttle_pwm, quad1.ch3
-
-            #send off mavlink commands
-            quad1.send_channel_pwm(0,0,throttle_pwm, 0)
-
-            #writing position and targets to the log file
-            self.log_file.write(
-                    str(time.time()) + ': Current Position (x, y, z, yaw): '
-                    + str(round(quad1.pos_x, 0)) + ', '
-                    + str(round(quad1.pos_y, 0)) + ', '
-                    + str(round(quad1.pos_y, 0)) + ', '
-                    + str(round(quad1.yaw, 0)) + "\n               Target Position  (x, y, z, yaw): "
-                    + str(round(self.target_x, 0)) + ', '
-                    + str(round(self.target_y, 0)) + ', '
-                    + str(round(self.target_z, 0)) + ', '
-                    + str(round(self.target_yaw, 0)) + "\n")
-        else:
-            #writing position and targets to the log file
-            self.log_file.write(
-                    str(time.time()) + ': Current Position (x, y, z, yaw): '
-                    + str(round(quad1.pos_x, 0)) + ', '
-                    + str(round(quad1.pos_y, 0)) + ', '
-                    + str(round(quad1.pos_y, 0)) + ', '
-                    + str(round(quad1.yaw, 0)) + "\n")
-            quad1.disconnect_pwm_channels()
-        # calls for the ui to be updated
         ui.update()
 
-
-    # returns error in terms of roll, pitch, yaw and throttle direction distances
-    def calc_error(self, x, y, z, yaw, target_x, target_y, target_z, target_yaw):
-
-        # converts targets from tracking frame of reference to the quadcopter frame of reference
-        self.roll_direction_error = math.cos(yaw) * (target_y - y) - math.sin(yaw) * (target_x - x)
-        self.pitch_direction_error = math.sin(yaw) * (target_y - y) + math.cos(yaw) * (target_x - x)
-        self.throttle_direction_error = target_z - z
-        self.yaw_dirrection_error = target_yaw - yaw
-
-    # converts a throttle setting into pwm that can be transmitted
-    def calc_pwm_throttle(self, throttle_setting):
-
-        # caps the throttle setting
-        if throttle_setting > 1000:
-            throttle_setting = 1000
-        elif throttle_setting < 0:
-            throttle_setting = 0
-
+    def calc_throttle_ppm(self):
         # adjusts depending on the set throttle ranges - need to make some checks still
-        if throttle_setting > 500:
-            throttle_pwm_range = self.max_throttle_pwm - self.mid_throttle_pwm
-            return self.mid_throttle_pwm + ((throttle_setting - 500) * throttle_pwm_range)/500
+        if self.throttle_normalised > 500:
+            throttle_ppm_range = self.max_throttle_ppm - self.mid_throttle_ppm
+            return self.mid_throttle_ppm + ((self.throttle_normalised - 500) * throttle_ppm_range)/500
         else:
-            throttle_pwm_range = self.mid_throttle_pwm - self.min_throttle_pwm
-            return self.min_throttle_pwm + (throttle_setting * throttle_pwm_range)/500
+            throttle_ppm_range = self.mid_throttle_ppm - self.min_throttle_ppm
+            return self.min_throttle_ppm + (self.throttle_normalised * throttle_ppm_range)/500
 
     def reverse_pwm_throttle(self, pwm_setting):
 
@@ -252,8 +233,8 @@ class ControlSystem(Thread):
 class Quadcopter(Thread, RigidBody):
 
     # other static variables for the quadcopter
-    device = "/dev/ttyUSB0"
-    baud = 57600
+    # device = "/dev/ttyUSB0"
+    # baud = 57600
     first_time_imu = True
     target_system = 0
     target_component = 0
@@ -315,6 +296,7 @@ class Quadcopter(Thread, RigidBody):
 
     #same as the threaded function, just runs once
     def run2(self):
+        print "run2(self)"
         # stores message from the quadcopter
         #  msg = self.master.recv_match(blocking=False)
         # if msg:
@@ -370,10 +352,9 @@ class Quadcopter(Thread, RigidBody):
 
     #takes in all messages from the quadcopter and interperates them
     def run(self):
-
         # continuous loop that monitors the information coming from the quadcopter
         while 1:
-
+            print "run(self)"
             # stores message from the quadcopter
             # msg = self.master.recv_match(blocking=False)
             # if msg:
@@ -431,6 +412,7 @@ class Quadcopter(Thread, RigidBody):
 
     # details the different types of messages able to be recieved from the quadcopter data stream
     def request_data_stream(self, request, frequency, on_off):
+        print "request_data_stream()"
         # on_off of 1 turns on the data stream, value of 0 turns off
 
         # system = self.master.target_system
@@ -493,8 +475,7 @@ class Quadcopter(Thread, RigidBody):
         # component = self.master.target_component
         # Send off pwm commands
         # self.master.mav.rc_channels_override_send(system, component, roll, pitch, throttle, yaw, 0, 0, 0, 0)
-        print roll + " " + pitch + " " + throttle + " " + yaw + " " +
-            " " + 0 + " " + 0 + " " + 0 + " " + 0
+        print roll, " ", pitch, " ", throttle, " ", yaw, " ", " ", 0, " ", 0, " ", 0, " ", 0
 
 ########################################################################################################################
 class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
@@ -522,7 +503,7 @@ class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
         self.ch_box_1.setText(str(round(quad1.ch1, 4)))
         self.ch_box_2.setText(str(round(quad1.ch2, 4)))
         self.ch_box_3.setText(str(round(quad1.ch3, 4)))
-        self.ch_box_4.setText(str(round(quad1.ch4, 4)))    #self.quad1.ch5, 4)))
+        self.ch_box_4.setText(str(round(quad1.ch4, 4)))
         self.ch_box_5.setText(str(round(quad1.ch5, 4)))
         self.ch_box_6.setText(str(round(quad1.ch6, 4)))
         self.ch_box_7.setText(str(round(quad1.ch7, 4)))
@@ -699,7 +680,7 @@ ControlPannel.show()
 if __name__ == "__main__":
 
     # initialises the quadcopter
-    quad1 = Quadcopter("Quad1", "Vicon")
+    quad1 = Quadcopter("quad", "Vicon")
 
     # initialises the control system
     controller = ControlSystem()
