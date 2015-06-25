@@ -525,7 +525,7 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_18">
           <item>
-           <widget class="QLineEdit" name="ch_box_1">
+           <widget class="QLineEdit" name="ch_box_00">
             <property name="text">
              <string>0</string>
             </property>
@@ -538,7 +538,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="ch_box_2">
+           <widget class="QLineEdit" name="ch_box_01">
             <property name="text">
              <string>0</string>
             </property>
@@ -551,7 +551,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="ch_box_3">
+           <widget class="QLineEdit" name="ch_box_02">
             <property name="text">
              <string>0</string>
             </property>
@@ -564,7 +564,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="ch_box_4">
+           <widget class="QLineEdit" name="ch_box_03">
             <property name="text">
              <string>0</string>
             </property>
@@ -581,7 +581,7 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_13">
           <item>
-           <widget class="QLineEdit" name="ch_box_5">
+           <widget class="QLineEdit" name="ch_box_04">
             <property name="text">
              <string>0</string>
             </property>
@@ -594,7 +594,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="ch_box_6">
+           <widget class="QLineEdit" name="ch_box_05">
             <property name="text">
              <string>0</string>
             </property>
@@ -607,7 +607,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="ch_box_7">
+           <widget class="QLineEdit" name="ch_box_06">
             <property name="text">
              <string>0</string>
             </property>
@@ -620,7 +620,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="ch_box_8">
+           <widget class="QLineEdit" name="ch_box_07">
             <property name="text">
              <string>0</string>
             </property>
@@ -642,7 +642,7 @@
      <attribute name="title">
       <string>Debug Boxes</string>
      </attribute>
-     <widget class="QLineEdit" name="box_1">
+     <widget class="QLineEdit" name="box_00">
       <property name="geometry">
        <rect>
         <x>40</x>
@@ -661,7 +661,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLineEdit" name="box_2">
+     <widget class="QLineEdit" name="box_01">
       <property name="geometry">
        <rect>
         <x>40</x>
@@ -680,7 +680,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLineEdit" name="box_7">
+     <widget class="QLineEdit" name="box_06">
       <property name="geometry">
        <rect>
         <x>40</x>
@@ -699,7 +699,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLineEdit" name="box_6">
+     <widget class="QLineEdit" name="box_05">
       <property name="geometry">
        <rect>
         <x>40</x>
@@ -718,7 +718,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLineEdit" name="box_5">
+     <widget class="QLineEdit" name="box_04">
       <property name="geometry">
        <rect>
         <x>40</x>
@@ -737,7 +737,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLineEdit" name="box_4">
+     <widget class="QLineEdit" name="box_03">
       <property name="geometry">
        <rect>
         <x>40</x>
@@ -756,7 +756,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLineEdit" name="box_3">
+     <widget class="QLineEdit" name="box_02">
       <property name="geometry">
        <rect>
         <x>40</x>
@@ -775,7 +775,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLineEdit" name="box_8">
+     <widget class="QLineEdit" name="box_07">
       <property name="geometry">
        <rect>
         <x>120</x>
@@ -794,11 +794,30 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLineEdit" name="box_9">
+     <widget class="QLineEdit" name="box_08">
       <property name="geometry">
        <rect>
         <x>120</x>
         <y>50</y>
+        <width>71</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>0</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="box_09">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>80</y>
         <width>71</width>
         <height>27</height>
        </rect>
@@ -817,7 +836,7 @@
       <property name="geometry">
        <rect>
         <x>120</x>
-        <y>80</y>
+        <y>110</y>
         <width>71</width>
         <height>27</height>
        </rect>
@@ -836,7 +855,7 @@
       <property name="geometry">
        <rect>
         <x>120</x>
-        <y>110</y>
+        <y>140</y>
         <width>71</width>
         <height>27</height>
        </rect>
@@ -855,7 +874,7 @@
       <property name="geometry">
        <rect>
         <x>120</x>
-        <y>140</y>
+        <y>170</y>
         <width>71</width>
         <height>27</height>
        </rect>
@@ -874,25 +893,6 @@
       <property name="geometry">
        <rect>
         <x>120</x>
-        <y>170</y>
-        <width>71</width>
-        <height>27</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>0</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-      <property name="readOnly">
-       <bool>true</bool>
-      </property>
-     </widget>
-     <widget class="QLineEdit" name="box_14">
-      <property name="geometry">
-       <rect>
-        <x>120</x>
         <y>200</y>
         <width>71</width>
         <height>27</height>
@@ -908,7 +908,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLineEdit" name="box_15">
+     <widget class="QLineEdit" name="box_14">
       <property name="geometry">
        <rect>
         <x>200</x>
@@ -927,7 +927,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLineEdit" name="box_16">
+     <widget class="QLineEdit" name="box_15">
       <property name="geometry">
        <rect>
         <x>200</x>
@@ -946,7 +946,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLineEdit" name="box_17">
+     <widget class="QLineEdit" name="box_16">
       <property name="geometry">
        <rect>
         <x>200</x>
@@ -965,7 +965,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLineEdit" name="box_18">
+     <widget class="QLineEdit" name="box_17">
       <property name="geometry">
        <rect>
         <x>200</x>
@@ -984,7 +984,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLineEdit" name="box_19">
+     <widget class="QLineEdit" name="box_18">
       <property name="geometry">
        <rect>
         <x>200</x>
@@ -1003,7 +1003,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLineEdit" name="box_20">
+     <widget class="QLineEdit" name="box_19">
       <property name="geometry">
        <rect>
         <x>200</x>
@@ -1022,7 +1022,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLineEdit" name="box_21">
+     <widget class="QLineEdit" name="box_20">
       <property name="geometry">
        <rect>
         <x>200</x>

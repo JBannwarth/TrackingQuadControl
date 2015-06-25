@@ -1,21 +1,29 @@
-__author__ = 'Jay Mills'
-#credit to Usman Qayyum for providing help with the initial ros interfacing code
+""" @package quad_controller
+Run a controllers for arducopter quadcopters runnnig off Vicon position
+measurments.
 
-#this program runs a controllers for arducopter quadcopters runnnig off Vicon
-#position measurments
-#requires ROS for the interfaces between with the quadcopter and the tracking software
-#run by typing the command: python quad_controller.py
+Require ROS for the interfaces between with the quadcopter and the tracking
+software.
 
+Credit to Usman Qayyum for providing help with the initial ros interfacing code.
 
-# !/usr/bin/env python
+This package is developed for use with the motion capture system in the Faculty
+of Engineering at the University of Auckland.
 
+@author Jay Mills
+@author Jeremie Xavier Joseph Bannwarth
+@version 0.1
+@date 06/2015
+"""
+
+# ------------------------------------------------------------------------------
+# Import commands
 import os
 import sys
 import math
 import roslib
 # roslib.load_manifest('roscopter')
 import rospy
-# import roscopter.msg
 import time
 from sensor_msgs.msg import NavSatFix
 from geometry_msgs.msg import TransformStamped
@@ -26,18 +34,8 @@ import ControlPannel
 from rigid_body import RigidBody
 from arduino_serial_interface import ardu_rc_serial_interface
 
-# mavlink_dir = os.path.realpath(os.path.join(
-#     os.path.dirname(os.path.realpath(__file__)),
-#     'mavlink'))
-# sys.path.insert(0, mavlink_dir)
-#
-# pymavlink_dir = os.path.join(mavlink_dir, 'pymavlink')
-# sys.path.insert(0, pymavlink_dir)
-#
-# from pymavlink import mavutil
-
-
-# the below is needed for the ui setup
+# ------------------------------------------------------------------------------
+# UI Setup
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
@@ -51,24 +49,19 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
 
-
-#details the objects being tracked and how they are controlled
-########################################################################################################################
-class ControlSystem(Thread):
-
-    # refresh rate of the controller
+# ------------------------------------------------------------------------------
+class control_system(Thread):
+    """ Run control algorithm in a separate thread.
+    """
+    ## Sampling rate of the controller (in ms).
     period = 0.0225
-    control_rate = 1/period
 
-    # this controller has not yet been tested
-    # altitude_control = AltitudeControl.AltControl(period)
     altitude_ctrl = altitude_controller(period)
-    ardu_interface = ardu_rc_serial_interface()
 
     #target position of the quadcopter being controlled, units:cm
     target_x = 0.0
     target_y = 0.0
-    target_z = 0.0
+    target_z = 100.0
     target_yaw = 0.0
 
     #land positions of quadcopter
@@ -82,18 +75,7 @@ class ControlSystem(Thread):
     land_command = False
     stabilize_command = False
 
-    # the errors which the controllers will work upon
-    throttle_direction_error = 0.0
-    yaw_direction_error = 0.0
-    pitch_direction_error = 0.0
-    roll_direction_error = 0.0
-
     # pwm throttle settings and outputs
-    pwm_throttle = 0.0
-    max_throttle_pwm = 1948
-    mid_throttle_pwm = 1500
-    min_throttle_pwm = 1093
-    throttle_control_setting = 0.0
 
     throttle_ppm = 0
     min_throttle_ppm = 670
@@ -101,45 +83,50 @@ class ControlSystem(Thread):
     min_throttle_ppm = 1465
     throttle_normalised = 0
 
-    # initialising the thread subclass
     def __init__(self):
+        """ Initialise the thread subclass.
+        """
         Thread.__init__(self)
 
         #initialise log file
         self.log_file = open('logfile: '+time.strftime("%c"), 'w')
         self.log_file.write("Test\n")
 
-    # this is the threaded function for this class, started by calling class.start()
     def run(self):
+        """ Threaded function for this class.
+        """
         try:
             print("Waiting")
             self.earliercmdtime = 0
             rospy.sleep(.1)
 
-            # checks if a ROS core is operational
-            while not rospy.is_shutdown():  # start loop
+            # Check if a ROS core is operational
+            while not rospy.is_shutdown():
+                # Start loop
 
-                # ensures the required rate of operation is met and updates the stored time
+                # Ensure the required rate of operation is met and update the
+                # stored time
                 if float(time.time()) - self.period >= self.earliercmdtime:
                     self.earliercmdtime = time.time()
 
-                    #run the quad update loop iteration
+                    # Run the quad update loop iteration
                     quad1.run2()
-                    #calls the main control algorithm
+                    # Call the main control algorithm
                     self.control_loop()
 
             rospy.spin()
         except rospy.ROSInterruptException:
             pass
 
-    # main control algorithm
     def control_loop(self):
-        # updates the quad position, call update functions below for added rigib bodies
+        """ Run main control algorithm.
+        """
+        # Update the quad position, call update functions below for added rigid bodies
         quad1.update_pos_values()
 
-        # claculates the control errors, adjust for required errors
-        self.calc_error(quad1.pos_x, quad1.pos_y, quad1.pos_z, quad1.yaw,
-                self.target_x, self.target_y, self.target_z, self.target_yaw)
+        # Calculate the control errors, adjust for required errors
+        # self.calc_error(quad1.pos_x, quad1.pos_y, quad1.pos_z, quad1.yaw,
+        #         self.target_x, self.target_y, self.target_z, self.target_yaw)
 
         self.altitude_ctrl.set_height_setpoint(target_z)
         self.altitude_ctrl.update(quad1.pos_z)
@@ -194,10 +181,10 @@ class ControlSystem(Thread):
 
         #convert control numbers to pwm periods
         # throttle_pwm = self.calc_pwm_throttle(self.throttle_control_setting)
-        throttle_ppm = calc_throttle_ppm()
-        #print time.time(), throttle_pwm, quad1.ch3
 
-        #writing position and targets to the log file
+        # print time.time(), throttle_pwm, quad1.ch3
+        throttle_ppm = map_throttle_ppm()
+        # Write position and targets to the log file
         self.log_file.write(
                 str(time.time()) + ': Current Position (x, y, z, yaw): '
                 + str(round(quad1.pos_x, 0)) + ', '
@@ -211,8 +198,10 @@ class ControlSystem(Thread):
 
         ui.update()
 
-    def calc_throttle_ppm(self):
-        # adjusts depending on the set throttle ranges - need to make some checks still
+    def map_throttle_ppm(self):
+        """ Map the throttle values from the normalised \f$[0,1000]\f$ range to
+        the allowable PPM spacing range.
+        """
         if self.throttle_normalised > 500:
             throttle_ppm_range = self.max_throttle_ppm - self.mid_throttle_ppm
             return self.mid_throttle_ppm + ((self.throttle_normalised - 500) * throttle_ppm_range)/500
@@ -220,266 +209,107 @@ class ControlSystem(Thread):
             throttle_ppm_range = self.mid_throttle_ppm - self.min_throttle_ppm
             return self.min_throttle_ppm + (self.throttle_normalised * throttle_ppm_range)/500
 
-    def reverse_pwm_throttle(self, pwm_setting):
-
-        if pwm_setting > self.mid_throttle_pwm:
-            throttle_pwm_range = self.max_throttle_pwm - self.mid_throttle_pwm
-            return 500 + ((pwm_setting - self.mid_throttle_pwm)  * 500 / throttle_pwm_range)
-        else:
-            throttle_pwm_range = self.mid_throttle_pwm - self.min_throttle_pwm
-            return (pwm_setting - self.min_throttle_pwm) * 500 / throttle_pwm_range
-
-########################################################################################################################
-class Quadcopter(Thread, RigidBody):
-
-    # other static variables for the quadcopter
-    # device = "/dev/ttyUSB0"
-    # baud = 57600
-    first_time_imu = True
+# ----------------------------------------------------------------------------------------------
+class quadcopter(Thread,
+                 RigidBody):
+    """ Detail the object being tracked and how it is controlled.
+    """
     target_system = 0
     target_component = 0
 
     transmitter_control = True
     have_control = False
 
-    #IMU values
-    imu_roll = 0
-    imu_pitch = 0
-    imu_yaw = 0
+    ## Number of channels recognised by the RC transmitter.
+    number_channels = 8
+    ## RC transmitter channels PPM periods.
+    channels = [0] * number_channels
+    ## Arduino interface to control RC transmitter via serial.
+    ardu_interface = ardu_rc_serial_interface()
 
-    # quad channels that it recognizes
-    ch1 = 0
-    ch2 = 0
-    ch3 = 0
-    ch4 = 0
-    ch5 = 0
-    ch6 = 0
-    ch7 = 0
-    ch8 = 0
-
-    def __init__(self, name, tracker):
+    def __init__(self,
+                 name= "quad",
+                 tracker = "Vicon"):
+        """ The constructor.
+        @param self The object pointer.
+        @param name VRPN name of the body tracked.
+        @param tracker Motion capture system used (Vicon or Optitrack).
+        """
         Thread.__init__(self)
         assert isinstance(name, object)
         self.name = name
         self.tracker = tracker
 
-        self.send_odometry = TransformStamped()
-        self.pub_odom = rospy.Publisher('/controller_send', TransformStamped)
-
-        # self.master = mavutil.mavlink_connection(self.device, self.baud)
-        # if self.device is None:
-        #    print("You must specify a serial device")
-        #    sys.exit(1)
-
-        #device = "/dev/ttyACM0"
-        #baud=11520
-
-        # self.pub_state = rospy.Publisher('state', roscopter.msg.State)
-        # self.pub_vfr_hud = rospy.Publisher('vfr_hud', roscopter.msg.VFR_HUD)
-        # self.pub_attitude = rospy.Publisher('attitude', roscopter.msg.Attitude)
-        # self.pub_raw_imu = rospy.Publisher('raw_imu', roscopter.msg.Mavlink_RAW_IMU)
-        # self.pub_gps = rospy.Publisher('gps', NavSatFix)
-        # self.pub_rc = rospy.Publisher('rc', roscopter.msg.RC)
-
+        # Subscribe to the VRPN pose stream
         rospy.init_node('roscopter')
         rospy.Rate(100)
         rospy.Subscriber("/" + self.name + "/pose", TransformStamped, self.get_rigid_body)
-        #wait for a heartbeat so we know the target system IDs
-        # print("Waiting for APM heartbeat...")
-        # self.master.wait_heartbeat()
-        # print("Heartbeat from APM (system %u component %u)" % (self.master.target_system, self.master.target_system))
 
-        # requests data streams from the quadcopter over mavlink, options are stated in the function
-        # self.request_data_stream("rc_channels", 50, 1)
-        # imu values
-        # self.request_data_stream("extra1", 50, 1)
+    def update_channels(self):
+        """ Update the channel values to send to the RC transmitter.
 
-    #same as the threaded function, just runs once
-    def run2(self):
-        print "run2(self)"
-        # stores message from the quadcopter
-        #  msg = self.master.recv_match(blocking=False)
-        # if msg:
-        #     # stores the message type
-        #     #msg_type = msg.get_type()
-        #     #print msg_type # debugging to check which data streams are operational
-        #
-        #     # checks if the message contains information
-        #     if msg.get_type() == "BAD_DATA":
-        #         if mavutil.all_printable(msg.data):
-        #             sys.stdout.write(msg.data)
-        #             sys.stdout.flush()
-        #     else:
-        #         # add in new messages to monitor below
-        #         if msg_type == "ATTITUDE":
-        #
-        #             # publishes information to the rostopic
-        #             self.pub_attitude.publish(msg.roll * 180 / 3.1415, msg.pitch * 180 / 3.1415,
-        #                                       msg.yaw * 180 / 3.1415, msg.rollspeed, msg.pitchspeed, msg.yawspeed)
-        #
-        #             #upadtes imu values
-        #             self.imu_yaw = msg.yaw * 180 / 3.14159
-        #             self.imu_roll = msg.roll * 180 / 3.14159
-        #             self.imu_pitch = msg.pitch * 180 / 3.14159
-        #
-        #         # updates the channel data
-        #         elif msg_type == "RC_CHANNELS_RAW":
-        #             self.ch1 = msg.chan1_raw
-        #             self.ch2 = msg.chan2_raw
-        #             self.ch3 = msg.chan3_raw
-        #             self.ch4 = msg.chan4_raw
-        #             self.ch5 = msg.chan5_raw
-        #             self.ch6 = msg.chan6_raw
-        #             self.ch7 = msg.chan7_raw
-        #             self.ch8 = msg.chan8_raw
-        #
-        # #checks if channel 5 is below the threshold and gives back control to the transmitter
-        # if self.ch5 < 1400:
-        #     if not self.transmitter_control:
-        #         if self.have_control:
-        #
-        #             # informs via terminal
-        #             print "You no longer have control, Transmitter has taken over control"
-        #             self.transmitter_control = True
-        #             self.have_control = False
-        #
-        #             # changes the control message on the ui
-        #             ui.control_toggle_button.setText("Take Over Control")
-        #             self.disconnect_pwm_channels()
-        # else:
-        #     # turns off transmitter control so that the program is able to take over when requested
-        #     self.transmitter_control = False
+        Channel mapping:
+        - Channel 0: thrust
+        - Channel 1-7: ??
+        @param self The object pointer.
+        """
+        self.channels[0] = controller.throttle_ppm
+        for i in xrange(1, len(channels)):
+            self.channels[i] = controller.mid_throttle_ppm
 
-    #takes in all messages from the quadcopter and interperates them
     def run(self):
-        # continuous loop that monitors the information coming from the quadcopter
+        """ Continuously update the transmitter channel PPM values.
+        @param self The object pointer.
+        """
         while 1:
-            print "run(self)"
-            # stores message from the quadcopter
-            # msg = self.master.recv_match(blocking=False)
-            # if msg:
-            #     # stores the message type
-            #     msg_type = msg.get_type()
-            #     #print msg_type # debugging to check which data streams are operational
-            #
-            #     # checks if the message contains information
-            #     if msg.get_type() == "BAD_DATA":
-            #         if mavutil.all_printable(msg.data):
-            #             sys.stdout.write(msg.data)
-            #             sys.stdout.flush()
-            #     else:
-            #         # add in new messages to monitor below
-            #         if msg_type == "ATTITUDE":
-            #
-            #             # publishes information to the rostopic
-            #             self.pub_attitude.publish(msg.roll * 180 / 3.1415, msg.pitch * 180 / 3.1415,
-            #                                       msg.yaw * 180 / 3.1415, msg.rollspeed, msg.pitchspeed, msg.yawspeed)
-            #
-            #             #upadtes imu values
-            #             self.imu_yaw = msg.yaw * 180 / 3.14159
-            #             self.imu_roll = msg.roll * 180 / 3.14159
-            #             self.imu_pitch = msg.pitch * 180 / 3.14159
-            #
-            #         # updates the channel data
-            #         elif msg_type == "RC_CHANNELS_RAW":
-            #             self.ch1 = msg.chan1_raw
-            #             self.ch2 = msg.chan2_raw
-            #             self.ch3 = msg.chan3_raw
-            #             self.ch4 = msg.chan4_raw
-            #             self.ch5 = msg.chan5_raw
-            #             self.ch6 = msg.chan6_raw
-            #             self.ch7 = msg.chan7_raw
-            #             self.ch8 = msg.chan8_raw
-            #
-            #
-            # #checks if channel 5 is below the threshold and gives back control to the transmitter
-            # if self.ch5 < 1400:
-            #     if not self.transmitter_control:
-            #         if self.have_control:
-            #
-            #             # informs via terminal
-            #             print "You no longer have control, Transmitter has taken over control"
-            #             self.transmitter_control = True
-            #             self.have_control = False
-            #
-            #             # changes the control message on the ui
-            #             ui.control_toggle_button.setText("Take Over Control")
-            #             self.disconnect_pwm_channels()
-            # else:
-            #     # turns off transmitter control so that the program is able to take over when requested
-            #     self.transmitter_control = False
-            # time.sleep(0.01)
+            self.update_channels()
 
-    # details the different types of messages able to be recieved from the quadcopter data stream
-    def request_data_stream(self, request, frequency, on_off):
+    def request_data_stream(self,
+                            request,
+                            frequency,
+                            on_off):
+        """ Detail the different types of messages able to be recieved from the
+        quadcopter data stream.
+
+        @warning Not implemented.
+        @param self The object pointer.
+        @param request Something.
+        @param frequency Something else.
+        @param on_off Something other.
+        """
         print "request_data_stream()"
-        # on_off of 1 turns on the data stream, value of 0 turns off
 
-        # system = self.master.target_system
-        # component = self.master.target_component
-        # send = mavutil.mavlink.MAV_DATA_STREAM_RC_CHANNELS
-        #
-        # # all data streams will be enabled
-        # if request == "all":
-        #     send = mavutil.mavlink.MAV_DATA_STREAM_ALL
-        #     send_true = True
-        # # servo_output_raw, rc_channels_raw
-        # elif request == "rc_channels":
-        #     send = mavutil.mavlink.MAV_DATA_STREAM_RC_CHANNELS
-        #     send_true = True
-        # # scaled_pressure, sensor_offsets, raw_imu
-        # elif request == "raw_sensor":
-        #     send = mavutil.mavlink.MAV_DATA_STREAM_RAW_SENSORS
-        #     send_true = True
-        # # meminfo, mission_current, mav_controller_output, sys_status
-        # elif request == "extended_status":
-        #     send = mavutil.mavlink.MAV_DATA_STREAM_EXTENDED_STATUS
-        #     send_true = True
-        # # gobal_position_int
-        # elif request == "stream_position":
-        #     send = mavutil.mavlink.MAV_DATA_STREAM_POSITION
-        #     send_true = True
-        # # attitude
-        # elif request == "extra1":
-        #     send = mavutil.mavlink.MAV_DATA_STREAM_EXTRA1
-        #     send_true = True
-        # # vrf_hud
-        # elif request == "extra2":
-        #     send = mavutil.mavlink.MAV_DATA_STREAM_EXTRA2
-        #     send_true = True
-        # # ahrs, hwstatus, system_time
-        # elif request == "extra3":
-        #     send = mavutil.mavlink.MAV_DATA_STREAM_EXTRA3
-        #     send_true = True
-        # else:
-        #     send_true = False
-        #
-        # # checks if the requested data type is valid
-        # if send_true:
-        #     # requests data stream from the autopilot
-        #     self.master.mav.request_data_stream_send(system, component, send, frequency, on_off)
+    def disconnect_ppm_channels(self):
+        """ Give back control of all channels to the transmitter.
 
-    # gives back control to the transmitter of all channels
-    def disconnect_pwm_channels(self):
-        self.send_channel_pwm(0, 0, 0, 0)
+        @warning Not implemented.
+        @param self The object pointer.
+        """
+        self.send_channel_ppm(0, 0, 0, 0)
 
-    # sends pwm to specified control channels, ch1-ch4, a setting of 0 gives back control to the transmitter
-    def send_channel_pwm(self, roll, pitch, throttle, yaw):
-        # Throttle: high is up
-        # Yaw: high is yaw right
-        # Pitch: high is pitch up
-        # Roll: high is roll right
+    def send_channel_ppm(self,
+                         roll,
+                         pitch,
+                         throttle,
+                         yaw):
+        """ Send PPM to specified control channels (channel 0 to channel 3).
 
-        # Gather the system and component ID's
-        # system = self.master.target_system
-        # component = self.master.target_component
+        A setting of 0 gives back control to the transmitter.
+        @warning Old implementation.
+        @param self The object pointer.
+        @param roll Quad roll command (high is roll right).
+        @param pitch Quad pitch command (high is pitch up).
+        @param throttle Quad throttle command (high is up).
+        @param yaw Quad yaw command (high is yaw right).
+        """
         # Send off pwm commands
         # self.master.mav.rc_channels_override_send(system, component, roll, pitch, throttle, yaw, 0, 0, 0, 0)
         print roll, " ", pitch, " ", throttle, " ", yaw, " ", " ", 0, " ", 0, " ", 0, " ", 0
 
-########################################################################################################################
+# ----------------------------------------------------------------------------------------------
 class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
-
+    """ Interface with GUI control pannel developed in Qt Designer.
+    """
     # zero position used to make position requests easier for the user
     zero_x = 0
     zero_y = 0
@@ -489,41 +319,49 @@ class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
     land_position_set = False
     landed = True
 
-    # updates all fields in the ui
     def update(self):
-        self.tracking_roll_box.setText(str(round(quad1.rigid_body_roll * 180 / 3.1419, 4)))
-        self.tracking_pitch_box.setText(str(round(quad1.rigid_body_pitch * 180 / 3.1419, 4)))
-        self.tracking_yaw_box.setText(str(round((quad1.rigid_body_yaw-self.zero_yaw) * 180 / 3.1419, 4)))
-        self.tracking_x_position_box.setText(str(round(quad1.rigid_body_x-self.zero_x, 4)))
-        self.tracking_y_position_box.setText(str(round(quad1.rigid_body_y-self.zero_y, 4)))
-        self.tracking_z_position_box.setText(str(round(quad1.rigid_body_z-self.zero_z, 4)))
-        self.imu_roll_box.setText(str(round(quad1.imu_roll, 4)))
-        self.imu_pitch_box.setText(str(round(quad1.imu_pitch, 4)))
-        self.imu_yaw_box.setText(str(round(quad1.imu_yaw, 4)))
-        self.ch_box_1.setText(str(round(quad1.ch1, 4)))
-        self.ch_box_2.setText(str(round(quad1.ch2, 4)))
-        self.ch_box_3.setText(str(round(quad1.ch3, 4)))
-        self.ch_box_4.setText(str(round(quad1.ch4, 4)))
-        self.ch_box_5.setText(str(round(quad1.ch5, 4)))
-        self.ch_box_6.setText(str(round(quad1.ch6, 4)))
-        self.ch_box_7.setText(str(round(quad1.ch7, 4)))
-        self.ch_box_8.setText(str(round(quad1.ch8, 4)))
+        """ Update all fields in the UI.
+        @param self The object pointer.
+        """
+        # Tracking boxes
+        self.tracking_roll_box.setText(  str(round(quad1.rigid_body_roll * 180 / math.pi, 4)) )
+        self.tracking_pitch_box.setText( str(round(quad1.rigid_body_pitch * 180 / math.pi, 4)) )
+        self.tracking_yaw_box.setText(   str(round((quad1.rigid_body_yaw-self.zero_yaw) * 180 / math.pi, 4)) )
+        self.tracking_x_position_box.setText( str(round(quad1.rigid_body_x-self.zero_x, 4)) )
+        self.tracking_y_position_box.setText( str(round(quad1.rigid_body_y-self.zero_y, 4)) )
+        self.tracking_z_position_box.setText( str(round(quad1.rigid_body_z-self.zero_z, 4)) )
 
-        # debugging boxes
-        self.box_1.setText(str(round(controller.altitude_control.p_effort_z, 4)))
-        self.box_2.setText(str(round(controller.altitude_control.i_effort_z, 4)))
-        self.box_3.setText(str(round(controller.altitude_control.d_effort_z, 4)))
-        self.box_4.setText(str(round(controller.altitude_control.desired_accel_z, 4)))
-        self.box_5.setText(str(round(controller.altitude_control.vel_target_z, 4)))
-        self.box_6.setText(str(round(controller.altitude_control.pos_target_z, 4)))
-        self.box_7.setText(str(round(controller.pitch_direction_error, 4)))
-        self.box_8.setText(str(round(controller.roll_direction_error, 4)))
-        self.box_9.setText(str(round(controller.target_x, 4)))
-        self.box_10.setText(str(round(controller.target_y, 4)))
-        self.box_11.setText(str(round(quad1.pos_x, 4)))
-        self.box_12.setText(str(round(quad1.pos_y, 4)))
+        # IMU boxes (not used)
+        self.imu_roll_box.setText(  str(round(quad1.imu_roll, 4)) )
+        self.imu_pitch_box.setText( str(round(quad1.imu_pitch, 4)) )
+        self.imu_yaw_box.setText(   str(round(quad1.imu_yaw, 4)) )
 
-        if quad1.have_control and not controller.takeoff_command and not controller.land_command:
+        # Channel boxes
+        self.ch_box_00.setText( str(round(quad1.channels[0], 4)) )
+        self.ch_box_01.setText( str(round(quad1.channels[1], 4)) )
+        self.ch_box_02.setText( str(round(quad1.channels[2], 4)) )
+        self.ch_box_03.setText( str(round(quad1.channels[3], 4)) )
+        self.ch_box_04.setText( str(round(quad1.channels[4], 4)) )
+        self.ch_box_05.setText( str(round(quad1.channels[5], 4)) )
+        self.ch_box_06.setText( str(round(quad1.channels[6], 4)) )
+        self.ch_box_07.setText( str(round(quad1.channels[7], 4)) )
+
+        # Debugging boxes
+        self.box_00.setText( str(round(controller.altitude_control.p_effort_z, 4)) )
+        self.box_01.setText( str(round(controller.altitude_control.i_effort_z, 4)) )
+        self.box_02.setText( str(round(controller.altitude_control.d_effort_z, 4)) )
+        self.box_03.setText( str(round(controller.altitude_control.desired_accel_z, 4)) )
+        self.box_04.setText( str(round(controller.altitude_control.vel_target_z, 4)) )
+        self.box_05.setText( str(round(controller.altitude_control.pos_target_z, 4)) )
+        self.box_06.setText( str(round(controller.pitch_direction_error, 4)) )
+        self.box_07.setText( str(round(controller.roll_direction_error, 4)) )
+        self.box_08.setText( str(round(controller.target_x, 4)) )
+        self.box_09.setText( str(round(controller.target_y, 4)) )
+        self.box_10.setText( str(round(quad1.pos_x, 4)) )
+        self.box_11.setText( str(round(quad1.pos_y, 4)) )
+
+        if (quad1.have_control and not
+            controller.takeoff_command and not controller.land_command):
             if (quad1.pos_z < controller.land_z + 5):
                 self.take_off_land_button.setText("Take off")
                 self.landed = True
@@ -532,17 +370,36 @@ class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
                 ui.landed = False
 
 
-    # initialises the call backs from the ui
     def setup(self):
-        QtCore.QObject.connect(self.set_home_position_button, QtCore.SIGNAL(_fromUtf8("clicked()")), self.set_zero_position)
-        QtCore.QObject.connect(self.set_home_orientation_button, QtCore.SIGNAL(_fromUtf8("clicked()")), self.set_zero_orientation)
-        QtCore.QObject.connect(self.goto_position_button, QtCore.SIGNAL(_fromUtf8("clicked()")), self.goto_position)
-        QtCore.QObject.connect(self.control_toggle_button, QtCore.SIGNAL(_fromUtf8("clicked()")), self.control_toggle)
-        QtCore.QObject.connect(self.set_land_position_button, QtCore.SIGNAL(_fromUtf8("clicked()")), self.set_land_position)
-        QtCore.QObject.connect(self.take_off_land_button, QtCore.SIGNAL(_fromUtf8("clicked()")), self.take_off_land)
-       # QtCore.QObject.connect(self.set_PID_coefficients_button, QtCore.SIGNAL(_fromUtf8("clicked()")), self.set_PID_coefficients)
+        """ Initialise the call-backs from the UI.
+        @param self The object pointer.
+        """
+        QtCore.QObject.connect(self.set_home_position_button,
+                               QtCore.SIGNAL(_fromUtf8("clicked()")),
+                               self.set_zero_position)
+        QtCore.QObject.connect(self.set_home_orientation_button,
+                               QtCore.SIGNAL(_fromUtf8("clicked()")),
+                               self.set_zero_orientation)
+        QtCore.QObject.connect(self.goto_position_button,
+                               QtCore.SIGNAL(_fromUtf8("clicked()")),
+                               self.goto_position)
+        QtCore.QObject.connect(self.control_toggle_button,
+                               QtCore.SIGNAL(_fromUtf8("clicked()")),
+                               self.control_toggle)
+        QtCore.QObject.connect(self.set_land_position_button,
+                               QtCore.SIGNAL(_fromUtf8("clicked()")),
+                               self.set_land_position)
+        QtCore.QObject.connect(self.take_off_land_button,
+                               QtCore.SIGNAL(_fromUtf8("clicked()")),
+                               self.take_off_land)
+        # QtCore.QObject.connect(self.set_PID_coefficients_button,
+        #                        QtCore.SIGNAL(_fromUtf8("clicked()")),
+        #                        self.set_PID_coefficients)
 
     def take_off_land(self):
+        """ Send take off/landing commands. (?)
+        @param self The object pointer.
+        """
         if self.land_position_set:
             if quad1.have_control:
                 if self.landed:
@@ -556,7 +413,8 @@ class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
                     controller.target_yaw = controller.land_yaw
                     self.take_off_land_button.setText("Land")
 
-                    # informs the user of the updated target position and orientation via the terminal
+                    # Inform the user of the updated target position and
+                    # orientation via the terminal
                     print "Taking off to 100cm"
                 else:
                     controller.altitude_control.accel_integral_max_z = 100
@@ -570,34 +428,38 @@ class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
         else:
             print "Please set the land position"
 
-
-    #sets the land position before taking off is enabled
     def set_land_position(self):
+        """ Set the land position before taking off is enabled.
+        @param self The object pointer.
+        """
         controller.land_x = quad1.pos_x
         controller.land_y = quad1.pos_y
         controller.land_z = quad1.pos_z
         controller.land_yaw = quad1.yaw
         self.land_position_set = True
 
-        print "Land position is now x:", controller.land_x, " y:", controller.land_y, " z:", controller.land_z
+        print ( "Land position is now x:", controller.land_x, " y:",
+            controller.land_y, " z:", controller.land_z )
 
-    # toggles between computer control and transmitter control of the quadcopter
     def control_toggle(self):
-
-        # checks if the transmitter has allowed computer control
+        """ Toggle between computer control and transmitter control of the
+        quadcopter.
+        @param self The object pointer.
+        """
+        # Check if the transmitter has allowed computer control
         if not quad1.transmitter_control:
 
-            # checks if the computer already has control
+            # Check if the computer already has control
             if quad1.have_control:
 
-                # gives back control and updates the text on the control button
+                # Give back control and updates the text on the control button
                 quad1.have_control = False
                 self.control_toggle_button.setText("Take Over Control")
                 print "You no longer have control"
                 # quad1.disconnect_pwm_channels() # used to enable transmitter control
 
             else:
-                #changing the take off land button to appropriate text
+                # Change the take off land button to appropriate text
                 if quad1.pos_z > (controller.land_z + 10):
                     self.take_off_land_button.setText("Land")
                     self.landed = False
@@ -605,70 +467,83 @@ class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
                     self.take_off_land_button.setText("Take off")
                     self.landed = True
 
-                #converting the current users throttle output to set the hover throttle
-                controller.altitude_control.hover_throttle = controller.reverse_pwm_throttle(quad1.ch3)
+                # Convert the current users throttle output to set the hover
+                # throttle
+                controller.altitude_control.hover_throttle = controller.reverse_pwm_throttle(quad1.channel[2])
                 controller.altitude_control.reset_controller_z()
 
-                #takes over control and updates the text on the control button
+                # Take over control and update the text on the control button
                 quad1.have_control = True
                 self.control_toggle_button.setText("Give Back Control")
 
-                # sets target as the current position to stabilise around and informs the user via the terminal
+                # Set target as the current position to stabilise around and
+                # inform user via the terminal
                 controller.target_x = quad1.pos_x
                 controller.target_y = quad1.pos_y
                 controller.target_z = quad1.pos_z
                 print controller.target_z
                 controller.target_yaw = quad1.yaw
-                print "You now have control, stabilizing about x:", controller.target_x, " y:", controller.target_y, \
-                    " z:", controller.target_z, " yaw: ", controller.target_yaw
+                print ( "You now have control, stabilizing about x:",
+                     controller.target_x, " y:", controller.target_y, " z:",
+                     controller.target_z, " yaw: ", controller.target_yaw )
 
-                #turns on the right controller
+                # Turns the right controller
                 controller.altitude_control.accel_integral_max_z = 100
                 controller.takeoff_command = False
                 controller.land_command = False
                 controller.stabilize_command = True
 
-        # doesnt allow control toggle if the transmitter has not enabled computer control
+        # Don't allow control toggle if the transmitter has not enabled computer
+        # control
         else:
-            # ensures the computer doensnt have control and informs the user via the terminal
+            # Ensure the computer doesn't have control and inform the user via terminal
             quad1.have_control = False
-            print "You cannot take control transmitter has control, please switch channel 5 before trying to take over"
+            print ( "You cannot take control transmitter has control,",
+                " please switch channel 5 before trying to take over" )
 
-    # sets the zero position
     def set_zero_position(self):
+        """ Set the zero position.
+        @param self The object pointer.
+        """
 
-        # defines the zero reference position as the quadcopters current position
+        # Define the zero reference position as the quadcopters current position
         self.zero_x = quad1.rigid_body_x
         self.zero_y = quad1.rigid_body_y
         self.zero_z = quad1.rigid_body_z
 
-        # informs the user of the updated zero position in the tracking reference frame via the terminal
-        print "Zero position is now x:", self.zero_x, " y:", self.zero_y, " z:", self.zero_z
+        # Inform the user of the updated zero position in the tracking reference
+        # frame via the terminal
+        print ( "Zero position is now x:", self.zero_x, " y:", self.zero_y,
+            " z:", self.zero_z )
 
-    # sets the zero orientation
     def set_zero_orientation(self):
+        """ Set the zero orientation.
+        @param self The object pointer.
+        """
 
-        # defines the zero reference orientation as the quadcopters current orientation
+        # Define the zero reference orientation as the quadcopters current
+        # orientation
         self.zero_yaw = quad1.rigid_body_yaw
 
-        # informs the user of the updated zero orientation in the tracking reference frame via the terminal
+        # Inform the user of the updated zero orientation in the tracking
+        # reference frame via the terminal
         print "Zero orientaton is now yaw:", quad1.rigid_body_yaw
 
-    # sets the target positions
     def goto_position(self):
-
-        # sets the target positions from the users input positions
+        """ Set the target position.
+        """
+        # Set the target positions from the users input positions
         controller.target_x = self.zero_x + float(self.goto_x_position_box.text())
         controller.target_y = self.zero_y + float(self.goto_y_position_box.text())
         controller.target_z = self.zero_z + float(self.goto_z_position_box.text())
         controller.target_yaw = self.zero_yaw + float(self.goto_yaw_box.text())
 
-        # informs the user of the updated target position and orientation via the terminal
-        print "Going to x:", controller.target_x, " y:", controller.target_y," z:", controller.target_z, " yaw:", \
-            controller.target_yaw
+        # Inform the user of the updated target position and orientation via the terminal
+        print ( "Going to x:", controller.target_x, " y:", controller.target_y,
+            " z:", controller.target_z, " yaw:", controller.target_yaw )
 
-
-# sets up the GUI
+# ----------------------------------------------------------------------------------------------
+# Set up the GUI
 import sys
 app = QtGui.QApplication(sys.argv)
 ControlPannel = QtGui.QMainWindow()
@@ -677,19 +552,22 @@ ui.setupUi(ControlPannel)
 ui.setup()
 ControlPannel.show()
 
+# ----------------------------------------------------------------------------------------------
+# Main function
 if __name__ == "__main__":
 
-    # initialises the quadcopter
-    quad1 = Quadcopter("quad", "Vicon")
+    # Initialise the quadcopter
+    quad1 = quadcopter("quad", "Vicon")
 
-    # initialises the control system
-    controller = ControlSystem()
+    # Initialise the control system
+    controller = control_system()
 
-    # sets the threaded functions in the classes as daemons, so they close when the parent thread closes (the ui)
+    # Set the threaded functions in the classes as daemons, so they close when
+    # the parent thread (the GUI) closes
     quad1.daemon = True
     controller.daemon = True
 
-    # starts the threaded functions
-    #quad1.start()
+    # Start threads
+    # quad1.start()
     controller.start()
     sys.exit(app.exec_())
