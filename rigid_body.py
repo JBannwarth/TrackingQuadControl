@@ -15,7 +15,7 @@ import rospy
 from geometry_msgs.msg import TransformStamped
 import math
 
-class RigidBody(object):
+class rigid_body(object):
     """ Interface with ros_vrpn_client to retrieve a tracked rigid body's
     pose.
     """

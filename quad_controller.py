@@ -31,7 +31,7 @@ from threading import Thread
 from altitude_control import altitude_controller
 from PyQt4 import QtCore, QtGui
 import ControlPannel
-from rigid_body import RigidBody
+from rigid_body import rigid_body
 from arduino_serial_interface import ardu_rc_serial_interface
 
 # ------------------------------------------------------------------------------
@@ -211,7 +211,7 @@ class control_system(Thread):
 
 # ----------------------------------------------------------------------------------------------
 class quadcopter(Thread,
-                 RigidBody):
+                 rigid_body):
     """ Detail the object being tracked and how it is controlled.
     """
     target_system = 0
@@ -304,10 +304,11 @@ class quadcopter(Thread,
         """
         # Send off pwm commands
         # self.master.mav.rc_channels_override_send(system, component, roll, pitch, throttle, yaw, 0, 0, 0, 0)
-        print roll, " ", pitch, " ", throttle, " ", yaw, " ", " ", 0, " ", 0, " ", 0, " ", 0
+        print ( roll, " ", pitch, " ", throttle, " ", yaw, " ",  " ",  0,
+            " ",  0, " ",  0, " ", 0 )
 
 # ----------------------------------------------------------------------------------------------
-class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
+class ui_control_pannel(ControlPannel.Ui_ControlPannel):
     """ Interface with GUI control pannel developed in Qt Designer.
     """
     # zero position used to make position requests easier for the user
@@ -360,8 +361,8 @@ class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
         self.box_10.setText( str(round(quad1.pos_x, 4)) )
         self.box_11.setText( str(round(quad1.pos_y, 4)) )
 
-        if (quad1.have_control and not
-            controller.takeoff_command and not controller.land_command):
+        if ( quad1.have_control and not
+            controller.takeoff_command and not controller.land_command ):
             if (quad1.pos_z < controller.land_z + 5):
                 self.take_off_land_button.setText("Take off")
                 self.landed = True
@@ -429,7 +430,7 @@ class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
             print "Please set the land position"
 
     def set_land_position(self):
-        """ Set the land position before taking off is enabled.
+        """ Set the landing position before taking off is enabled.
         @param self The object pointer.
         """
         controller.land_x = quad1.pos_x
@@ -547,7 +548,7 @@ class Ui_ControlPannel(ControlPannel.Ui_ControlPannel):
 import sys
 app = QtGui.QApplication(sys.argv)
 ControlPannel = QtGui.QMainWindow()
-ui = Ui_ControlPannel()
+ui = ui_control_pannel()
 ui.setupUi(ControlPannel)
 ui.setup()
 ControlPannel.show()
